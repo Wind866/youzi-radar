@@ -2021,20 +2021,20 @@
   "seat_count": 406,
   "youzi_buy": 3849573058.26,
   "youzi_sell": 2906552482.83,
-  "youzi_net": 943020575.4300001,
-  "inst_net": 1036266611.010001,
-  "north_net": 574568663.9000002,
-  "retail_net": 54906169.99000003,
+  "youzi_net": 943020575.43,
+  "inst_net": 1036266611.01,
+  "north_net": 574568663.9,
+  "retail_net": 54906169.99,
   "other_net": 1162169234.31,
-  "total_net": 3770931254.6400013,
+  "total_net": 3770931254.64,
   "total_buy": 15175691304.19,
-  "quant_net": 829293937.5200001,
+  "quant_net": 829293937.52,
   "top_net": 403229449.67,
   "youzi_in_stocks": 41,
   "youzi_out_stocks": 27,
   "limit_up_count": 41,
   "limit_up_youzi": 16,
-  "known_ratio": 0.250076310531953,
-  "known_buy_ratio": 0.2536670640629818
+  "known_ratio": 0.25,
+  "known_buy_ratio": 0.25
  }
 }

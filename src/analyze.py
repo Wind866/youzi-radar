@@ -526,7 +526,10 @@ def save_history(result: dict) -> Path:
             {"code": s["code"], "name": s["name"], "net": round(s["youzi_net"], 2)}
             for s in sorted(result["stocks"], key=lambda x: -abs(x["youzi_net"]))[:300]
         ],
-        "market": result["market"],
+        # 浮点求和顺序不同会差最后几位，落盘前定死小数位，
+        # 否则每次重算都会在 history 里产生一堆无意义的 diff
+        "market": {k: round(v, 2) if isinstance(v, float) else v
+                   for k, v in result["market"].items()},
     }
     path = HISTORY_DIR / f"{result['trade_date']}.json"
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")

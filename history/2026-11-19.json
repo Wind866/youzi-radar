@@ -1498,19 +1498,19 @@
   "youzi_buy": 4702824883.17,
   "youzi_sell": 2408161176.06,
   "youzi_net": 2294663707.11,
-  "inst_net": -927023249.2699997,
+  "inst_net": -927023249.27,
   "north_net": 1604119988.95,
   "retail_net": 112869576.15,
-  "other_net": 140484792.45999998,
+  "other_net": 140484792.46,
   "total_net": 3225114815.4,
-  "total_buy": 12081130975.050001,
-  "quant_net": 340476800.43000007,
+  "total_buy": 12081130975.05,
+  "quant_net": 340476800.43,
   "top_net": 539027598.67,
   "youzi_in_stocks": 48,
   "youzi_out_stocks": 19,
   "limit_up_count": 23,
   "limit_up_youzi": 8,
-  "known_ratio": 0.7114982995808169,
-  "known_buy_ratio": 0.38927025068118976
+  "known_ratio": 0.71,
+  "known_buy_ratio": 0.39
  }
 }
