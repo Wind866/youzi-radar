@@ -56,7 +56,9 @@ jobs:
           if [ -n "$RUN_DATE" ]; then
             ARGS="--date $RUN_DATE"
           elif [ "$FORCE" != "true" ]; then
-            ARGS="--skip-if-stale"
+            # 19:16 若龙虎榜尚未披露，在作业超时预算内最多等 12 分钟再重试；
+            # 等不到才判定为休市跳过，避免「披露晚了就整天没有报告」
+            ARGS="--skip-if-stale --wait-minutes 12"
           fi
           # force 同时绕过休市判断与台账判重，用于补推 / 手动重推
           if [ "$FORCE" = "true" ]; then

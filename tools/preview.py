@@ -18,7 +18,7 @@ def main(td=None):
 
     print("交易日", r["trade_date"], "| 上榜", m["stock_count"], "只 | 席位", m["seat_count"], "个")
     print("全榜净额", y(m["total_net"]))
-    print("  知名游资", y(m["youzi_net"]), f"占比 {m['known_ratio']*100:.0f}%")
+    print("  知名游资", y(m["youzi_net"]), f"占全榜买入额 {m['known_buy_ratio']*100:.0f}%")
     print("  一线", y(m["top_net"]), "| 量化", y(m["quant_net"]),
           "| 机构", y(m["inst_net"]), "| 北向", y(m["north_net"]),
           "| 散户", y(m["retail_net"]), "| 其他", y(m["other_net"]))

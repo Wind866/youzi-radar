@@ -9,8 +9,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
+import time
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -41,6 +43,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--no-history", action="store_true", help="不写入历史快照")
     p.add_argument("--skip-if-stale", action="store_true",
                    help="工作日但取不到当日数据时跳过（用于定时任务避开休市日）")
+    p.add_argument("--wait-minutes", type=int, default=0,
+                   help="当日龙虎榜还没披露时，最多等待多少分钟再重试（定时档用）")
     p.add_argument("--force", action="store_true",
                    help="忽略台账判重，强制重新推送（台账已记过的交易日默认跳过推送）")
     p.add_argument("-v", "--verbose", action="store_true")
@@ -59,13 +63,49 @@ def _prev_stocks(trade_date: str) -> list[dict] | None:
         return None
 
 
+def _resolve_trade_date(args: argparse.Namespace) -> str:
+    """确定要出报的交易日；定时档在数据未披露时在预算内等待。
+
+    龙虎榜披露时间不固定（通常 17:30-18:00，偶尔更晚）。19:16 这一发如果碰上
+    尚未披露就直接放弃，当天就没有报告了——而 cron 一天只有这一发。
+    这里改成在超时预算内轮询，比直接跳过稳。
+    """
+    if args.date:
+        return args.date
+    td = eastmoney.latest_trade_date()
+    budget = max(0, args.wait_minutes) * 60
+    if not budget:
+        return td
+    today = datetime.now().strftime("%Y-%m-%d")
+    deadline = time.time() + budget
+    while td != today and time.time() < deadline:
+        remain = int(deadline - time.time())
+        nap = min(180, max(30, remain))
+        logging.info("当日龙虎榜尚未披露（最近交易日 %s），%s 秒后重试", td, nap)
+        time.sleep(nap)
+        try:
+            td = eastmoney.latest_trade_date()
+        except Exception as e:  # noqa: BLE001
+            logging.warning("重试查询交易日失败: %s", e)
+    return td
+
+
 def run(args: argparse.Namespace) -> int:
-    td = args.date or eastmoney.latest_trade_date()
+    td = _resolve_trade_date(args)
     now = datetime.now()
     if args.skip_if_stale and not args.date and td != now.strftime("%Y-%m-%d") and now.weekday() < 5:
         logging.info("今日 %s 无新龙虎榜数据（最近交易日 %s），判定为休市，跳过推送",
                      now.strftime("%Y-%m-%d"), td)
         return 0
+
+    # 已推过的交易日直接结束：Worker 准点派发与仓库 cron 兜底会各触发一次，
+    # 第二次没必要把几千行数据重抓一遍（真正推送前还有一次复查，防并发窗口）
+    if not (args.dry_run or args.no_push):
+        done = ledger.pushed(td)
+        if done and not args.force:
+            logging.info("⏭ %s 已于 %s 推送成功，本次直接结束（要重推加 --force）",
+                         td, done.get("pushed_at"))
+            return 0
 
     logging.info("===== 游资动向 %s =====", td)
 
@@ -86,7 +126,8 @@ def run(args: argparse.Namespace) -> int:
         print("\n" + md + "\n")
 
     card = render.to_feishu_card(result)
-    size = len(str(card).encode("utf-8"))
+    # 按真正发出去的 JSON 序列化算体积（str(dict) 的引号/空格不同，会低估或高估）
+    size = len(json.dumps(card, ensure_ascii=False).encode("utf-8"))
     logging.info("飞书卡片 %s 字节", size)
 
     if args.dry_run or args.no_push:
@@ -94,7 +135,8 @@ def run(args: argparse.Namespace) -> int:
         logging.info(render.to_text(result))
         return 0
 
-    # 台账判重：Worker 准点派发与 GitHub cron 兜底会各触发一次，只认第一次推送
+    # 再查一次台账：上面那次是「省算力」，这次是「防并发」——
+    # Worker 与仓库 cron 若几乎同时启动，两个进程都可能在对方写台账之前通过第一次检查
     prev = ledger.pushed(td)
     if prev and not args.force:
         logging.info("⏭ 跳过本次推送：%s 已于 %s 推送成功（强制重推加 --force）",

@@ -1373,23 +1373,23 @@
  ],
  "market": {
   "stock_count": 61,
-  "seat_count": 191,
-  "youzi_buy": 4604605424.810002,
-  "youzi_sell": 1786539375.4699996,
-  "youzi_net": 2818066049.3399997,
-  "inst_net": 502400299.28000003,
+  "seat_count": 292,
+  "youzi_buy": 4604605424.81,
+  "youzi_sell": 1786539375.47,
+  "youzi_net": 2818066049.34,
+  "inst_net": -355793880.2700001,
   "north_net": 671324136.86,
   "retail_net": 152881987.28000003,
   "other_net": -1168669968.07,
-  "total_net": 2976002504.6900005,
-  "total_buy": 9237963118.620005,
-  "quant_net": 530340906.33000004,
+  "total_net": 2117808325.1399999,
+  "total_buy": 10866134891.19,
+  "quant_net": 530340906.33,
   "top_net": 625194187.75,
   "youzi_in_stocks": 40,
   "youzi_out_stocks": 13,
   "limit_up_count": 28,
   "limit_up_youzi": 16,
-  "known_ratio": 0.946929999184778,
-  "known_buy_ratio": 0.4984437982361043
+  "known_ratio": 1.3306520783242786,
+  "known_buy_ratio": 0.4237574326951622
  }
 }

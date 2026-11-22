@@ -49,6 +49,23 @@ def _dedup(rows: list[dict], key_fn, expl_key: str = "EXPLANATION") -> list[dict
     return [v[1] for v in best.values()]
 
 
+def seat_key(r: dict) -> tuple:
+    """席位去重键。
+
+    机构专用席位的 OPERATEDEPT_CODE 恒为 '0'，同一只票上的多条记录代表
+    **不同机构**。若只按 (code, 股票) 去重，会把它们压成一条——留下的是
+    排在前面的买入行，卖出行整批消失，机构净额会由负翻正。
+    因此机构行必须带上买卖金额做区分（同股同额的两家机构理论上会撞键，
+    但概率远低于把整列数据算错）。
+    """
+    stock = str(r.get("SECURITY_CODE"))
+    dept = str(r.get("OPERATEDEPT_CODE") or "")
+    if dept and dept != "0":
+        return ("D", dept, stock)
+    return ("I", stock, r.get("OPERATEDEPT_NAME") or "",
+            round(_f(r.get("ACT_BUY")), 2), round(_f(r.get("ACT_SELL")), 2))
+
+
 # ---------------------------------------------------------------- 席位聚合
 
 def _agg_seats(seat_rows: list[dict]) -> dict[str, dict]:
@@ -265,42 +282,42 @@ def _continuity(today_seats: dict[str, dict], today_stocks: list[dict], history:
     if not history:
         return {"available": False, "days": 0}
 
-    seat_hist: dict[str, dict] = {}
-    stock_hist: dict[str, dict] = {}
-    for h in history:  # 旧 → 新，便于计算连续净买入天数
-        for s in h.get("seats") or []:
-            node = seat_hist.setdefault(s["alias"], {"net": 0.0, "days": 0, "streak": 0,
-                                                     "tier": s.get("tier")})
-            net = _f(s.get("net"))
-            node["net"] += net
-            node["days"] += 1
-            node["streak"] = node["streak"] + 1 if net > 0 else 0
-        for s in h.get("stocks") or []:
-            node = stock_hist.setdefault(s["code"], {"net": 0.0, "days": 0, "streak": 0,
-                                                     "name": s.get("name")})
-            net = _f(s.get("net"))
-            node["net"] += net
-            node["days"] += 1
-            node["streak"] = node["streak"] + 1 if net > 0 else 0
+    # 按「日」保存成 alias -> net / code -> net，而不是把若干天的数据压成一条累计。
+    # 压平之后无法区分「昨天没上榜」和「昨天上榜但净卖出」——两者都会打断连续，
+    # 但压平后缺席的那天权重为 0，连续天数会跨过空档继续累加，凭空报出「连续 4 日加仓」。
+    seat_days = [{s["alias"]: _f(s.get("net")) for s in h.get("seats") or []} for h in history]
+    stock_days = [{s["code"]: _f(s.get("net")) for s in h.get("stocks") or []} for h in history]
+
+    def streak(days: list[dict], key) -> int:
+        """从最近一天往回数，遇到缺席或净卖出即停。"""
+        n = 0
+        for m in reversed(days):
+            v = m.get(key)
+            if v is None or v <= 0:
+                break
+            n += 1
+        return n
+
+    def window_net(days: list[dict], key, n: int) -> float:
+        """连续区间内的累计净额（不含今日）。"""
+        return sum(days[-i].get(key, 0.0) for i in range(1, n + 1)) if n else 0.0
 
     persistent, fresh = [], []
     for alias, node in today_seats.items():
         if node["tier"] in {"inst", "north", "retail"}:
             continue
         today_net = node["net"]
-        h = seat_hist.get(alias)
         if today_net <= 0:
             continue
-        streak = (h["streak"] if h else 0) + 1
-        hist_net = h["net"] if h else 0.0
-        total = hist_net + today_net
-        if streak >= 2:
+        hist_streak = streak(seat_days, alias)
+        hist_net = window_net(seat_days, alias, hist_streak)
+        if hist_streak + 1 >= 2:
             persistent.append({
                 "alias": alias, "net": today_net, "tier": node["tier"],
-                "hist_net": hist_net, "total_net": total, "days": streak,
-                "stock_count": node["stock_count"],
+                "hist_net": hist_net, "total_net": hist_net + today_net,
+                "days": hist_streak + 1, "stock_count": node["stock_count"],
             })
-        elif h is None and today_net >= 3e7:
+        elif not any(alias in m for m in seat_days) and today_net >= 3e7:
             fresh.append({"alias": alias, "net": today_net, "tier": node["tier"],
                           "stock_count": node["stock_count"]})
     persistent.sort(key=lambda x: -x["total_net"])
@@ -311,14 +328,13 @@ def _continuity(today_seats: dict[str, dict], today_stocks: list[dict], history:
     for s in today_stocks:
         if s["youzi_net"] <= 0:
             continue
-        h = stock_hist.get(s["code"])
-        streak = (h["streak"] if h else 0) + 1
-        if streak < 2:
+        hist_streak = streak(stock_days, s["code"])
+        if hist_streak + 1 < 2:
             continue
         stock_persist.append({
-            "code": s["code"], "name": s["name"], "days": streak,
+            "code": s["code"], "name": s["name"], "days": hist_streak + 1,
             "today_net": s["youzi_net"],
-            "total_net": (h["net"] if h else 0.0) + s["youzi_net"],
+            "total_net": window_net(stock_days, s["code"], hist_streak) + s["youzi_net"],
             "change": s["change"], "industry": s["industry"],
             # 只说「连续被买」不够用，得交代是谁在持续买
             "buyers": [{"alias": b["alias"], "net": b["net"], "tier": b.get("tier")}
@@ -344,8 +360,13 @@ def analyze(
     history_days: int = 6,
 ) -> dict:
     td = snapshot["trade_date"]
-    seat_rows = _dedup(snapshot["seats"],
-                       lambda r: (r.get("OPERATEDEPT_CODE"), r.get("SECURITY_CODE")))
+    raw_seats = snapshot["seats"]
+    seat_rows = _dedup(raw_seats, seat_key)
+    # 抓取层已经按（席位, 股票）去过重，这里再少行就说明去重键有问题——
+    # 机构专用席位编码全是 '0'，键写错会整批吞掉卖出行，机构净额由负翻正
+    lost = len(raw_seats) - len(seat_rows)
+    if lost:
+        log.warning("席位明细二次去重丢弃 %s/%s 行，请检查 seat_key", lost, len(raw_seats))
     bond_codes = {str(r.get("SECURITY_CODE")) for r in seat_rows
                   if is_convertible_bond(r.get("SECURITY_CODE"))}
     if bond_codes:
@@ -377,7 +398,12 @@ def analyze(
 
     market = {
         "stock_count": len(stocks),
-        "seat_count": len({(r.get("OPERATEDEPT_CODE")) for r in seat_rows}),
+        # 营业部按编码去重；机构专用编码恒为 0，只能按「笔」计数，
+        # 直接对编码取 set 会把上百家机构算成 1 个
+        "seat_count": (len({str(r.get("OPERATEDEPT_CODE")) for r in seat_rows
+                            if str(r.get("OPERATEDEPT_CODE") or "0") != "0"})
+                       + sum(1 for r in seat_rows
+                             if str(r.get("OPERATEDEPT_CODE") or "0") == "0")),
         "youzi_buy": youzi_buy,
         "youzi_sell": youzi_sell,
         "youzi_net": youzi_net,
@@ -443,8 +469,11 @@ def analyze(
     # 赚钱效应：上一交易日上榜股今日表现
     prev_effect = None
     if prev_stocks:
-        chg = [_f(r.get("CHANGE_RATE")) for r in prev_stocks]
-        d1 = [_f(r.get("D1_CLOSE_ADJCHRATE")) for r in prev_stocks if r.get("D1_CLOSE_ADJCHRATE") is not None]
+        # 同一只票会因多个上榜原因出现多行，先按代码去重，
+        # 否则样本量虚高、均值被重复权重拉偏
+        prev_rows = _dedup(prev_stocks, lambda r: str(r.get("SECURITY_CODE")))
+        d1 = [_f(r.get("D1_CLOSE_ADJCHRATE")) for r in prev_rows
+              if r.get("D1_CLOSE_ADJCHRATE") is not None]
         if d1:
             up = sum(1 for x in d1 if x > 0)
             prev_effect = {
@@ -454,8 +483,6 @@ def analyze(
                 "limit_up": sum(1 for x in d1 if x >= 9.8),
                 "down5": sum(1 for x in d1 if x <= -5),
             }
-        elif chg:
-            pass
 
     return {
         "trade_date": td,
@@ -481,7 +508,11 @@ def analyze(
 
 
 def save_history(result: dict) -> Path:
-    """保存精简快照，供次日做连续性分析。"""
+    """保存精简快照，供次日做连续性分析。
+
+    名单要尽量全：连续性判断里「今天没出现」等于打断连续，如果只留前 200 个席位，
+    后面的席位每天都会因为被截断而「缺席」，连续天数永远算不出来。
+    """
     HISTORY_DIR.mkdir(parents=True, exist_ok=True)
     seats = sorted(result["seat_agg"].values(), key=lambda x: -abs(x["net"]))
     payload = {
@@ -489,11 +520,11 @@ def save_history(result: dict) -> Path:
         "seats": [
             {"alias": n["alias"], "net": round(n["net"], 2), "tier": n["tier"],
              "stock_count": n["stock_count"]}
-            for n in seats[:200] if n["tier"] != "inst"
+            for n in seats[:600] if n["tier"] != "inst"
         ],
         "stocks": [
             {"code": s["code"], "name": s["name"], "net": round(s["youzi_net"], 2)}
-            for s in sorted(result["stocks"], key=lambda x: -abs(x["youzi_net"]))[:150]
+            for s in sorted(result["stocks"], key=lambda x: -abs(x["youzi_net"]))[:300]
         ],
         "market": result["market"],
     }

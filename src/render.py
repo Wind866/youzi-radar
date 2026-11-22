@@ -15,6 +15,8 @@ def fmt_amt(v: float, sign: bool = True) -> str:
     """金额格式化：亿/万自动切换。"""
     if v is None:
         return "-"
+    if not v:
+        return "0"
     neg = v < 0
     a = abs(v)
     if a >= 1e8:
@@ -70,16 +72,20 @@ def _neg_amt(v: float) -> str:
     return "-" + fmt_amt(abs(v), sign=False)
 
 
-def _buyer_brief(buyers: list[dict], limit: int = 3) -> str:
+def _buyer_brief(buyers: list[dict], limit: int = 3, total: int | None = None) -> str:
     """抱团榜的参与游资串：别名 + 各自净买入额。
 
     抱团榜里「游资净额」是买卖轧差后的结果，只看这一个数字分不清是
     四家均摊还是一主三从。带上各自金额，才看得出谁是真主力。
+    超出展示条数时标出总家数，否则「家数」列说有 5 家、名单只有 3 家，对不上。
+    `total` 用于「列表已被上游截断」的场合，避免把 4 条当成全部。
     """
-    out = []
-    for b in buyers[:limit]:
-        out.append(f"{b['alias']} {fmt_amt(b['net'])}")
-    return "、".join(out) or "-"
+    out = [f"{b['alias']} {fmt_amt(b['net'])}" for b in buyers[:limit]]
+    text = "、".join(out) or "-"
+    n = max(total or 0, len(buyers))
+    if n > len(out):
+        text += f" 等{n}家"
+    return text
 
 
 def _sell_stocks(node: dict) -> list[dict]:
@@ -89,6 +95,15 @@ def _sell_stocks(node: dict) -> list[dict]:
 
 def _sell_count(node: dict) -> int:
     return len({s["code"] for s in _sell_stocks(node)})
+
+
+def _sell_brief(node: dict, limit: int = 4) -> str:
+    """出货标的串。只列前几只时补一句「等 N 只」，免得和「净卖出只数」矛盾。"""
+    outs = _sell_stocks(node)
+    text = _stock_brief(outs, limit)
+    if len(outs) > limit:
+        text += f" 等{len(outs)}只"
+    return text
 
 
 def _huddle_count(node: dict) -> str:
@@ -158,9 +173,8 @@ def to_markdown(r: dict) -> str:
     A("")
     A("| # | 游资 | 类型 | 净额 | 股票数 | 主攻方向 |")
     A("| ---: | --- | --- | ---: | ---: | --- |")
-    for i, n in enumerate(r["top_buy_seats"], 1):
-        if n["net"] <= 0:
-            continue
+    # 先过滤再编号：净额 <= 0 的不进榜，否则序号会跳（1、2、4…）
+    for i, n in enumerate([x for x in r["top_buy_seats"] if x["net"] > 0], 1):
         A(f"| {i} | {n['alias']} | {_tag_text(n)} | {fmt_amt(n['net'])} | {n['stock_count']} | "
           f"{_stock_brief(n['stocks'], 6)} |")
     A("")
@@ -219,14 +233,14 @@ def to_markdown(r: dict) -> str:
         A("| ---: | --- | --- | ---: | --- |")
         for i, n in enumerate(r["top_sell_seats"], 1):
             A(f"| {i} | {n['alias']} | {_tag_text(n)} | {_sell_count(n)} | "
-              f"{_stock_brief(_sell_stocks(n), 4)} |")
+              f"{_sell_brief(n, 4)} |")
         A("")
 
     limbo = r.get("limbo") or []
     if limbo:
-        A(f"## {sec.next()}、跌停板接货")
+        A(f"## {sec.next()}、跌停与重挫接货")
         A("")
-        A("游资在跌停板上逆势买入，通常是博次日反弹或撬板，风险与弹性都高。")
+        A("股价跌超 5%（含跌停）仍被游资净买入，通常是博次日反弹或撬板，风险与弹性都高。")
         A("")
         A("| 股票 | 涨幅 | 游资净额 | 买家 |")
         A("| --- | ---: | ---: | --- |")
@@ -258,10 +272,11 @@ def to_markdown(r: dict) -> str:
         A("")
         A(f"2 板以上 **{lad.get('total_2plus', 0)}** 只，最高 **{lad['max_board']}** 板　"
           f"（当日涨停 {lad['total']} 只，首板 {lad['total'] - lad.get('total_2plus', 0)} 只，"
-          f"炸板 {lad['broken']} 只）")
+          f"盘中开板后回封 {lad['broken']} 只）")
         A("")
         for t in boards:
-            names = "、".join(f"{x['name']}({x['industry']})" for x in t["stocks"])
+            names = "、".join(f"{x['name']}({x['industry']})" if x.get("industry") else x["name"]
+                             for x in t["stocks"])
             A(f"- **{t['board']} 板**（{t['count']} 只）：{names}")
         A("")
 
@@ -275,16 +290,15 @@ def to_markdown(r: dict) -> str:
               f"{_stock_brief(n['stocks'])} |")
         A("")
 
-    if r["unknown_seats"]:
+    unknown = [x for x in r["unknown_seats"] if x["net"] > 0]
+    if unknown:
         A(f"## {sec.next()}、未收录席位大额买入")
         A("")
         A("尚未进入别名库的营业部，往往是还没被命名的游资，值得持续跟踪。")
         A("")
         A("| 席位 | 净额 | 股票数 | 标的 |")
         A("| --- | ---: | ---: | --- |")
-        for n in r["unknown_seats"]:
-            if n["net"] <= 0:
-                continue
+        for n in unknown:
             A(f"| {n['alias']} | {fmt_amt(n['net'])} | {n['stock_count']} | "
               f"{_stock_brief(n['stocks'])} |")
         A("")
@@ -293,7 +307,8 @@ def to_markdown(r: dict) -> str:
     if c.get("available"):
         A(f"## {sec.next()}、连续性追踪")
         A("")
-        A(f"基于最近 {c['days']} 个交易日的历史快照。")
+        A(f"基于最近 {c['days']} 个交易日的历史快照（含今日共 {c['days'] + 1} 日）；"
+          "「连续」按逐日净买入判定，中间缺席或净卖出即重新计数。")
         A("")
         if c.get("persistent_seats"):
             A("**持续加仓席位**")
@@ -311,7 +326,7 @@ def to_markdown(r: dict) -> str:
             for s in c["persistent_stocks"]:
                 A(f"| {s['name']}({s['code']}) | {fmt_amt(s['today_net'])} | "
                   f"{fmt_amt(s['total_net'])} | {s['days']} | "
-                  f"{_buyer_brief(s.get('buyers') or [], 3)} |")
+                  f"{_buyer_brief(s.get('buyers') or [], 3, s.get('buyer_count'))} |")
             A("")
         if c.get("fresh_seats"):
             A("**今日新进大额席位**：" + "、".join(
@@ -399,8 +414,10 @@ def to_feishu_card(r: dict) -> dict:
         lines = ["**⚠️ 游资出货**（按净卖出额排序，金额为各自在单只票上的净卖出）"]
         for n in sells:
             outs = _sell_stocks(n)
-            tags = "、".join(f"{s['name']} {fmt_amt(s['net'])}" for s in outs[:3])
             cnt = _sell_count(n)
+            tags = "、".join(f"{s['name']} {fmt_amt(s['net'])}" for s in outs[:3])
+            if cnt > 3:
+                tags += f" 等{cnt}只"
             lines.append(f"· **{n['alias']}**{f'　{cnt}只' if cnt > 1 else ''}\n　{tags}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
@@ -434,7 +451,7 @@ def to_feishu_card(r: dict) -> dict:
     if c.get("available") and (c.get("persistent_stocks") or c.get("persistent_seats")):
         lines = [f"**🔁 连续追踪**（近{c['days'] + 1}日）"]
         for s in (c.get("persistent_stocks") or [])[:3]:
-            who = _buyer_brief(s.get("buyers") or [], 3)
+            who = _buyer_brief(s.get("buyers") or [], 3, s.get("buyer_count"))
             line = (f"· {s['name']} 连续{s['days']}日被游资买入 "
                     f"累计 {_feishu_amt(s['total_net'])}")
             lines.append(line + (f"\n　{who}" if who else ""))
@@ -454,7 +471,7 @@ def to_feishu_card(r: dict) -> dict:
             "header": {
                 "title": {"tag": "plain_text", "content": f"游资动向 · {td}"},
                 "subtitle": {"tag": "plain_text",
-                             "content": f"净流入 {fmt_amt(net)}　游资占买入 {m['known_buy_ratio'] * 100:.0f}%"},
+                             "content": f"全榜净额 {fmt_amt(net)}　游资占买入 {m['known_buy_ratio'] * 100:.0f}%"},
                 "template": head_tpl,
             },
             "elements": els,
@@ -468,5 +485,5 @@ def to_text(r: dict) -> str:
     lines = [f"游资动向 {r['trade_date']}",
              f"全榜净额 {fmt_amt(m['total_net'])} / 知名游资 {fmt_amt(m['youzi_net'])}",
              "加仓榜：" + "，".join(
-                 f"{n['alias']}{fmt_amt(n['net'])}" for n in r["top_buy_seats"][:5] if n["net"] > 0)]
+                 f"{n['alias']}{fmt_amt(n['net'])}" for n in r["top_buy_seats"][:6] if n["net"] > 0)]
     return "\n".join(lines)

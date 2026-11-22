@@ -10,8 +10,7 @@ from src import analyze, eastmoney, seats  # noqa: E402
 
 def main(td="2026-11-20"):
     snap = eastmoney.fetch_snapshot(td)
-    seat_rows = analyze._dedup(snap["seats"],
-                               lambda r: (r.get("OPERATEDEPT_CODE"), r.get("SECURITY_CODE")))
+    seat_rows = analyze._dedup(snap["seats"], analyze.seat_key)
     agg = defaultdict(lambda: {"net": 0.0, "buy": 0.0, "sell": 0.0, "n": 0, "stocks": []})
     for r in seat_rows:
         name = r.get("OPERATEDEPT_NAME") or ""
