@@ -18,6 +18,10 @@ on:
         description: "忽略休市判断，强制生成推送"
         type: boolean
         default: false
+      dry_run:
+        description: "只生成报告不推送（验证代码用）"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -51,6 +55,7 @@ jobs:
           FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
           RUN_DATE: ${{ inputs.date }}
           FORCE: ${{ inputs.force }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           ARGS=""
           if [ -n "$RUN_DATE" ]; then
@@ -63,6 +68,9 @@ jobs:
           # force 同时绕过休市判断与台账判重，用于补推 / 手动重推
           if [ "$FORCE" = "true" ]; then
             ARGS="$ARGS --force"
+          fi
+          if [ "$DRY_RUN" = "true" ]; then
+            ARGS="$ARGS --dry-run"
           fi
           echo "运行参数: $ARGS"
           python -m src.main $ARGS
