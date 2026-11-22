@@ -162,7 +162,7 @@ def to_markdown(r: dict) -> str:
         if n["net"] <= 0:
             continue
         A(f"| {i} | {n['alias']} | {_tag_text(n)} | {fmt_amt(n['net'])} | {n['stock_count']} | "
-          f"{_stock_brief(n['stocks'], 5)} |")
+          f"{_stock_brief(n['stocks'], 6)} |")
     A("")
 
     if r["huddle"]:
@@ -373,7 +373,7 @@ def to_feishu_card(r: dict) -> dict:
         if n["net"] <= 0 or rank >= 6:
             break
         rank += 1
-        stocks = "、".join(f"{s['name']}{fmt_amt(s['net'])}" for s in n["stocks"][:5])
+        stocks = "、".join(f"{s['name']}{fmt_amt(s['net'])}" for s in n["stocks"][:6])
         tag = _tag_text(n)
         lines.append(f"{rank}. **{n['alias']}**{f'（{tag}）' if tag else ''} "
                      f"{_feishu_amt(n['net'])}　{n['stock_count']}只\n　　{stocks}")
