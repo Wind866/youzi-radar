@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import analyze as engine
-from . import eastmoney, feishu, ledger, render
+from . import eastmoney, feishu, ledger, render, watchlist
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports"
@@ -41,6 +41,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--no-push", action="store_true", help="同 --dry-run")
     p.add_argument("--print", dest="show", action="store_true", help="打印 Markdown 报告")
     p.add_argument("--no-history", action="store_true", help="不写入历史快照")
+    p.add_argument("--no-watch", action="store_true", help="不更新未收录席位观察池")
     p.add_argument("--skip-if-stale", action="store_true",
                    help="工作日但取不到当日数据时跳过（用于定时任务避开休市日）")
     p.add_argument("--wait-minutes", type=int, default=0,
@@ -111,6 +112,25 @@ def run(args: argparse.Namespace) -> int:
 
     snapshot = eastmoney.fetch_snapshot(td, use_cache=not args.no_cache)
     result = engine.analyze(snapshot, prev_stocks=_prev_stocks(td))
+
+    # 观察池：只累积未收录席位的上榜轨迹，不动 tier、不改统计口径。
+    # 失败不能拖垮主流程——它是辅助信息，不是报告的必要条件。
+    if not args.no_watch:
+        try:
+            pool, newly = watchlist.merge(
+                watchlist.load(), td, result.get("other_seats") or [], watchlist.trade_days(td))
+            watchlist.annotate(result, pool, td, newly)
+            watchlist.save(pool)
+            w = result["watch"]
+            logging.info("观察池 %s 条｜待确认候选 %s 家（今日新晋 %s）",
+                         w["pool_size"], w["candidate_total"], w["new_count"])
+            for c in w["candidates"]:
+                if c.get("is_new"):
+                    logging.info("  ⚑ %s 累计上榜 %s 日、净买入 %s，确认后加入 "
+                                 "data/youzi_seats.json", c["alias"], c["days"],
+                                 render.fmt_amt(c["net_total"]))
+        except Exception as e:  # noqa: BLE001
+            logging.warning("观察池更新失败（不影响报告）: %s", e)
 
     md = render.to_markdown(result)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)

@@ -38,6 +38,16 @@ def is_convertible_bond(code: str) -> bool:
     return str(code)[:2] in {"11", "12"}
 
 
+# 东财偶尔把「自然人」「机构」这类聚合行混进席位表，它们不是某家营业部。
+# 不排除的话，11-18 那次「自然人 +11.75 亿」会顶掉真实营业部排到未收录榜第一。
+NOT_A_SEAT = {"自然人", "机构", "其他", "合计", "汇总"} | {""}
+
+
+def is_real_seat(*names: str) -> bool:
+    """至少有一个名字像营业部（不是纯聚合标记）。"""
+    return any((n or "").strip() not in NOT_A_SEAT for n in names)
+
+
 def _dedup(rows: list[dict], key_fn, expl_key: str = "EXPLANATION") -> list[dict]:
     best: dict = {}
     for r in rows:
@@ -431,11 +441,14 @@ def analyze(
     hot_money_seats = [n for n in seat_agg.values() if seatlib.is_hot_money(n)]
     top_hot_seats = sorted(hot_money_seats, key=lambda x: -x["net"])[:12]
 
-    # 未收录的营业部里净买入最大的，往往是还没被命名的游资
-    unknown_seats = sorted(
-        [n for n in seat_agg.values() if n["tier"] == "other"],
+    # 未收录的营业部里净买入最大的，往往是还没被命名的游资。
+    # 全量留给观察池累积（watchlist 只观察不改 tier），报告只展示前十。
+    other_seats = sorted(
+        [n for n in seat_agg.values()
+         if n["tier"] == "other" and is_real_seat(*n["seat_names"])],
         key=lambda x: -x["net"],
-    )[:10]
+    )
+    unknown_seats = other_seats[:10]
 
     # 抱团做多：多路游资同时净买入且股价没有大跌，按合力金额排序
     huddle = sorted(
@@ -492,6 +505,7 @@ def analyze(
         "top_sell_seats": top_sell_seats,
         "top_hot_seats": top_hot_seats,
         "unknown_seats": unknown_seats,
+        "other_seats": other_seats,
         "stocks": stocks,
         "huddle": huddle,
         "limbo": limbo,

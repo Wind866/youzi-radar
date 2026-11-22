@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from .watchlist import CAND_DAYS, CAND_NET, MIN_NET
+
 RED = "#d54941"
 GREEN = "#2ea121"
 GREY = "#8f959e"
@@ -132,6 +134,23 @@ def _stock_brief(stocks: list[dict], limit: int = 3, colored: bool = False) -> s
             out.append(f"{name}({chg:+.1f}% {fmt_amt(amt)})" if amt is not None
                        else f"{name}({chg:+.1f}%)")
     return " ".join(out)
+
+
+def _watch_cell(w: dict | None) -> str:
+    """未收录席位表里的「观察」列：这家是新面孔，还是已经连榜多日。
+
+    单看一天的金额分不清「偶尔上榜的普通营业部」和「正在成型的游资」，
+    上榜频次才是区分二者的关键，所以要把历史累积摆出来。
+    """
+    if not w:
+        return "-"
+    if w.get("candidate"):
+        return f"⚑ 达标（{w['days']}日 {fmt_amt(w['net_total'])}）"
+    if (w.get("streak") or 0) >= 2:
+        return f"连榜 {w['streak']} 日"
+    if (w.get("days") or 0) >= 2:
+        return f"累计 {w['days']} 日"
+    return "新面孔"
 
 
 # ---------------------------------------------------------------- Markdown
@@ -291,17 +310,39 @@ def to_markdown(r: dict) -> str:
         A("")
 
     unknown = [x for x in r["unknown_seats"] if x["net"] > 0]
-    if unknown:
+    watch = r.get("watch") or {}
+    watch_rows = watch.get("rows") or {}
+    cands = watch.get("candidates") or []
+    if unknown or cands:
         A(f"## {sec.next()}、未收录席位大额买入")
         A("")
-        A("尚未进入别名库的营业部，往往是还没被命名的游资，值得持续跟踪。")
+        A("尚未进入别名库的营业部，往往是还没被命名的游资。系统按交易日累积它们"
+          f"的上榜记录（单日净买入 {fmt_amt(MIN_NET, False)} 以上才计入，当前池内 "
+          f"{watch.get('pool_size', 0)} 家），累计满 {CAND_DAYS} 日且净买入过 "
+          f"{fmt_amt(CAND_NET, False)} 会列为候选。")
         A("")
-        A("| 席位 | 净额 | 股票数 | 标的 |")
-        A("| --- | ---: | ---: | --- |")
-        for n in unknown:
-            A(f"| {n['alias']} | {fmt_amt(n['net'])} | {n['stock_count']} | "
-              f"{_stock_brief(n['stocks'])} |")
-        A("")
+        if cands:
+            total = watch.get("candidate_total", len(cands))
+            A(f"**⚑ 待确认入库 {total} 家**（确认是游资后加进 "
+              "`data/youzi_seats.json`，下次上榜即按已知席位统计）")
+            A("")
+            for c in cands:
+                when = "今日仍在榜" if c.get("active_today") else f"上次 {c.get('last_seen')}"
+                stocks = "、".join(c.get("stocks") or [])
+                tail = f"　主买 {stocks}" if stocks else ""
+                mark = "🆕 " if c.get("is_new") else ""
+                A(f"- {mark}**{c['alias']}**　{c['days']} 日 "
+                  f"{fmt_amt(c['net_total'])}（首次 {c.get('first_seen')}，{when}）{tail}")
+            if total > len(cands):
+                A(f"- 另有 {total - len(cands)} 家，跑 `python tools/audit_seats.py` 看全部")
+            A("")
+        if unknown:
+            A("| 席位 | 净额 | 股票数 | 观察 | 标的 |")
+            A("| --- | ---: | ---: | --- | --- |")
+            for n in unknown:
+                A(f"| {n['alias']} | {fmt_amt(n['net'])} | {n['stock_count']} | "
+                  f"{_watch_cell(watch_rows.get(n['alias']))} | {_stock_brief(n['stocks'])} |")
+            A("")
 
     c = r.get("continuity") or {}
     if c.get("available"):
@@ -458,6 +499,18 @@ def to_feishu_card(r: dict) -> dict:
         for n in (c.get("persistent_seats") or [])[:2]:
             lines.append(f"· {n['alias']} 连续{n['days']}日加仓 "
                          f"累计 {_feishu_amt(n['total_net'])}")
+        els.append(div("\n".join(lines)))
+        els.append({"tag": "hr"})
+
+    # 未收录的新面孔：只报今天还在榜上的，昨天上榜今天没影的不占版面
+    w = r.get("watch") or {}
+    live = [c for c in (w.get("candidates") or []) if c.get("active_today")]
+    if live:
+        lines = [f"**👀 待确认的新面孔**（累计 {w.get('candidate_total', len(live))} 家，"
+                 f"今日在榜 {len(live)} 家）"]
+        for c in live[:3]:
+            lines.append(f"· **{c['alias']}** 累计 {c['days']}日 "
+                         f"{_feishu_amt(c['net_total'])}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 

@@ -91,7 +91,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add history reports 2>/dev/null || true
           git add state 2>/dev/null || true
-          [ -f data/industry_cache.json ] && git add data/industry_cache.json || true
+          # data 下有两份会自己长大的东西：行业缓存、未收录席位观察池
+          git add data 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "无变更，跳过提交"
             exit 0
