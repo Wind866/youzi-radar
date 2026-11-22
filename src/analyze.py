@@ -104,7 +104,9 @@ def _agg_seats(seat_rows: list[dict]) -> dict[str, dict]:
             sm["sell"] += sell
 
     for node in out.values():
-        node["stocks"] = sorted(node["_stock_map"].values(), key=lambda x: -abs(x["net"]))
+        # 按净额降序（不是绝对值）：加仓榜要的是「买得最多的排前面」，
+        # 按绝对值会让一笔大额卖出插到买入前面，读起来像在推荐那只票
+        node["stocks"] = sorted(node["_stock_map"].values(), key=lambda x: -x["net"])
         node["stock_count"] = len(node["stocks"])
         node["seat_count"] = len(node["seat_names"])
         node["seat_names"] = sorted(node["seat_names"])
