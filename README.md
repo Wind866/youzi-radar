@@ -53,7 +53,11 @@
 
 第一次想立刻验证效果：点 **Run workflow**，`date` 留空、`force` 勾上，跑完看群里有没有消息。
 
-默认每个工作日 **18:30（北京时间）** 自动运行。
+默认每个工作日 **19:16（北京时间）** 自动运行。
+
+主触发是 Cloudflare Worker `gh-actions-scheduler` 的准点派发，仓库自带的 cron
+只作兜底；两者前后脚各触发一次时，由 `state/push_ledger.json` 按数据日期判重，
+第二次只重算报告、不再推卡片。要强制重推，Run workflow 勾 `force`。
 
 ---
 
@@ -141,7 +145,9 @@ Windows PowerShell 用 `$env:FEISHU_WEBHOOK="..."`。
 东财接口偶尔抖动，脚本自带重试和退避。连续失败时手动 Run workflow 重跑一次即可。
 
 **想改推送时间？**
-改 `.github/workflows/youzi-daily.yml` 里的 cron。注意 **cron 是 UTC 时间**，北京时间减 8 小时。`30 10 * * 1-5` = 工作日北京时间 18:30。
+改 `.github/workflows/youzi-daily.yml` 里的 cron，**同时**改 `BIGApush/cloudflare/worker.js` 的 `PLAN`
+（两者漂移时 Worker 正常看不出来，一旦 Worker 失效就会直接漏档）。
+注意 **cron 是 UTC 时间**：`16 11 * * 1-5` = 工作日北京时间 19:16。
 
 **报告太长，群里刷屏？**
 飞书卡片已经是精简版（约 2KB）。完整版在仓库 `reports/` 目录里。

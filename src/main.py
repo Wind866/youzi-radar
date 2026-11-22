@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import analyze as engine
-from . import eastmoney, feishu, render
+from . import eastmoney, feishu, ledger, render
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports"
@@ -41,6 +41,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--no-history", action="store_true", help="不写入历史快照")
     p.add_argument("--skip-if-stale", action="store_true",
                    help="工作日但取不到当日数据时跳过（用于定时任务避开休市日）")
+    p.add_argument("--force", action="store_true",
+                   help="忽略台账判重，强制重新推送（台账已记过的交易日默认跳过推送）")
     p.add_argument("-v", "--verbose", action="store_true")
     return p.parse_args(argv)
 
@@ -92,12 +94,24 @@ def run(args: argparse.Namespace) -> int:
         logging.info(render.to_text(result))
         return 0
 
+    # 台账判重：Worker 准点派发与 GitHub cron 兜底会各触发一次，只认第一次推送
+    prev = ledger.pushed(td)
+    if prev and not args.force:
+        logging.info("⏭ 跳过本次推送：%s 已于 %s 推送成功（强制重推加 --force）",
+                     td, prev.get("pushed_at"))
+        return 0
+
     ok = feishu.send(card)
     if ok is False:
         logging.error("推送失败，请检查 webhook 与签名配置")
         return 2
     if ok is None:
         logging.warning("未配置飞书 webhook，本次仅生成报告")
+    else:
+        ledger.record(td, card_bytes=size,
+                      stock_count=result["market"]["stock_count"],
+                      youzi_net=round(result["market"]["youzi_net"], 2))
+        logging.info("台账已记录 %s", td)
 
     m = result["market"]
     logging.info("完成 | 上榜 %s 只 | 全榜净额 %s | 游资 %s",

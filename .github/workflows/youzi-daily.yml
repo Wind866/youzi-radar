@@ -2,8 +2,12 @@ name: 游资动向日报
 
 on:
   schedule:
-    # 北京时间 18:30 = UTC 10:30，龙虎榜一般在 17:30-18:00 披露完毕
-    - cron: "30 10 * * 1-5"
+    # 北京时间 19:16 = UTC 11:16。
+    # 主触发是 Cloudflare Worker gh-actions-scheduler 的 19:16 档期（准点、不延迟），
+    # 这条 cron 只是 Worker 或 PAT 出问题时的兜底；两者可能前后脚各触发一次，
+    # 由 src/ledger.py 按数据日期判重，第二次直接跳过推送。
+    # 19:16 留足了龙虎榜披露时间（一般 17:30-18:00 披露完毕）。
+    - cron: "16 11 * * 1-5"
   workflow_dispatch:
     inputs:
       date:
@@ -54,6 +58,10 @@ jobs:
           elif [ "$FORCE" != "true" ]; then
             ARGS="--skip-if-stale"
           fi
+          # force 同时绕过休市判断与台账判重，用于补推 / 手动重推
+          if [ "$FORCE" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
           echo "运行参数: $ARGS"
           python -m src.main $ARGS
 
@@ -72,6 +80,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add history reports 2>/dev/null || true
+          git add state 2>/dev/null || true
           [ -f data/industry_cache.json ] && git add data/industry_cache.json || true
           if git diff --cached --quiet; then
             echo "无变更，跳过提交"
