@@ -221,25 +221,6 @@ def _agg_stocks(
     return list(out.values())
 
 
-# ---------------------------------------------------------------- 板块
-
-def _agg_sectors(stocks: list[dict]) -> list[dict]:
-    agg: dict[str, dict] = {}
-    for s in stocks:
-        ind = s["industry"] or "未分类"
-        node = agg.setdefault(ind, {"industry": ind, "youzi_net": 0.0, "count": 0,
-                                    "inst_net": 0.0, "stocks": []})
-        node["youzi_net"] += s["youzi_net"]
-        node["inst_net"] += s["inst_net"]
-        node["count"] += 1
-        node["stocks"].append({"code": s["code"], "name": s["name"],
-                               "net": s["youzi_net"], "change": s["change"]})
-    for node in agg.values():
-        node["stocks"].sort(key=lambda x: -x["net"])
-        node["stocks"] = node["stocks"][:3]
-    return sorted(agg.values(), key=lambda x: -x["youzi_net"])
-
-
 # ---------------------------------------------------------------- 连板梯队
 
 def _build_ladder(pool: list[dict]) -> dict:
@@ -436,7 +417,14 @@ def analyze(
     # 榜单
     youzi_seats = [n for n in seat_agg.values() if seatlib.is_youzi(n)]
     top_buy_seats = sorted(youzi_seats, key=lambda x: -x["net"])[:15]
-    top_sell_seats = sorted([n for n in youzi_seats if n["net"] < 0], key=lambda x: x["net"])[:12]
+    # 出货榜展示的是「单只票卖了多少」，排序就得按各票净卖出之和来，
+    # 不能按席位总净额——席位在别的票上还有买入时，轧差会把名次压后，
+    # 于是 -1.10 亿的排到 -6195 万后面，看着像乱序
+    def _sell_only(node: dict) -> float:
+        return sum(s["net"] for s in node["stocks"] if s["net"] < 0)
+
+    top_sell_seats = sorted([n for n in youzi_seats if n["net"] < 0],
+                            key=_sell_only)[:12]
 
     hot_money_seats = [n for n in seat_agg.values() if seatlib.is_hot_money(n)]
     top_hot_seats = sorted(hot_money_seats, key=lambda x: -x["net"])[:12]
@@ -471,13 +459,10 @@ def analyze(
     )[:10]
 
     gainers = sorted(stocks, key=lambda s: -s["youzi_net"])[:10]
-    sectors = _agg_sectors(stocks)
 
     # 量化席位专项
     quant_seats = sorted([n for n in seat_agg.values() if n["tier"] == "quant"],
                          key=lambda x: -abs(x["net"]))[:10]
-    quant_stocks = sorted([s for s in stocks if any(b["tier"] == "quant" for b in s["buyers"])],
-                          key=lambda s: -s["youzi_net"])[:10]
 
     # 赚钱效应：上一交易日上榜股今日表现
     prev_effect = None
@@ -512,10 +497,8 @@ def analyze(
         "dump": dump,
         "divergence": divergence,
         "gainers": gainers,
-        "sectors": sectors,
         "ladder": _build_ladder(pool),
         "quant_seats": quant_seats,
-        "quant_stocks": quant_stocks,
         "prev_effect": prev_effect,
         "continuity": _continuity(seat_agg, stocks, load_history(history_days, before=td)),
     }
@@ -546,5 +529,8 @@ def save_history(result: dict) -> Path:
                    for k, v in result["market"].items()},
     }
     path = HISTORY_DIR / f"{result['trade_date']}.json"
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    # newline 固定为 \n：Windows 下默认会把 \n 转成 \r\n，工作区与仓库
+    # （.gitattributes 要求 eol=lf）不一致，走 API 直推时会把 CRLF 带上
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=1),
+                    encoding="utf-8", newline="\n")
     return path

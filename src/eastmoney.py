@@ -257,7 +257,8 @@ def _save_industry_cache(cache: dict[str, str]) -> None:
     try:
         INDUSTRY_CACHE.parent.mkdir(parents=True, exist_ok=True)
         INDUSTRY_CACHE.write_text(
-            json.dumps(cache, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
+            json.dumps(cache, ensure_ascii=False, indent=0, sort_keys=True),
+            encoding="utf-8", newline="\n")
     except OSError as e:
         log.warning("行业缓存写入失败: %s", e)
 
@@ -287,7 +288,7 @@ def industries(codes: list[str], budget: int = 90, push_limit: int = 120) -> dic
     """code -> 行业名称。行业变化极慢，采用本地缓存累积。
 
     主源用 F10 的 EM2016 二级行业，保证全市场口径一致；F10 未覆盖的再用 push2 批量兜底。
-    两个源都不可用时板块统计降级，不影响报告其他部分产出。
+    两个源都不可用时，个股的行业标签会缺，不影响报告其他部分产出。
     """
     cache = _load_industry_cache()
     need = [c for c in dict.fromkeys(str(x) for x in codes) if c and c not in cache]
@@ -320,7 +321,7 @@ def industries(codes: list[str], budget: int = 90, push_limit: int = 120) -> dic
         cache.update(fetched)
         _save_industry_cache(cache)
     if need and not fetched:
-        log.warning("行业接口不可用，板块统计将降级（已缓存的仍可用）")
+        log.warning("行业接口不可用，个股行业标签将缺失（已缓存的 %s 个仍可用）", len(cache))
 
     return {str(c): cache[str(c)] for c in codes if str(c) in cache}
 
@@ -368,7 +369,8 @@ def fetch_snapshot(trade_date: str | None = None, use_cache: bool = True) -> dic
     }
     try:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+        cache_file.write_text(json.dumps(snapshot, ensure_ascii=False),
+                              encoding="utf-8", newline="\n")
     except OSError as e:
         log.warning("缓存写入失败: %s", e)
     return snapshot

@@ -135,7 +135,8 @@ def run(args: argparse.Namespace) -> int:
     md = render.to_markdown(result)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     md_path = REPORT_DIR / f"{td}.md"
-    md_path.write_text(md, encoding="utf-8")
+    # newline 固定 \n：Windows 下 write_text 默认写 CRLF，与仓库的 eol=lf 不一致
+    md_path.write_text(md, encoding="utf-8", newline="\n")
     logging.info("Markdown 已写入 %s（%s 字）", md_path.relative_to(ROOT), len(md))
 
     if not args.no_history:

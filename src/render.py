@@ -100,12 +100,8 @@ def _sell_count(node: dict) -> int:
 
 
 def _sell_brief(node: dict, limit: int = 4) -> str:
-    """出货标的串。只列前几只时补一句「等 N 只」，免得和「净卖出只数」矛盾。"""
-    outs = _sell_stocks(node)
-    text = _stock_brief(outs, limit)
-    if len(outs) > limit:
-        text += f" 等{len(outs)}只"
-    return text
+    """出货标的串。"""
+    return _stock_brief(_sell_stocks(node), limit)
 
 
 def _huddle_count(node: dict) -> str:
@@ -120,6 +116,9 @@ def _stock_brief(stocks: list[dict], limit: int = 3, colored: bool = False) -> s
 
     只要该席位在这只票上有净买卖，就必须带上金额——只给涨跌幅的话，
     看不出这只票到底是主攻还是顺手做的，也分不出仓位轻重。
+
+    截断时补「等 N 只」：同行的「股票数」列写着 11 只而名单只有 6 个，
+    不标出总数会让人以为剩下 5 只没买到。
     """
     out = []
     for s in stocks[:limit]:
@@ -133,7 +132,10 @@ def _stock_brief(stocks: list[dict], limit: int = 3, colored: bool = False) -> s
         else:
             out.append(f"{name}({chg:+.1f}% {fmt_amt(amt)})" if amt is not None
                        else f"{name}({chg:+.1f}%)")
-    return " ".join(out)
+    text = " ".join(out)
+    if len(stocks) > limit:
+        text += f" 等{len(stocks)}只"
+    return text
 
 
 def _watch_cell(w: dict | None) -> str:
@@ -145,11 +147,11 @@ def _watch_cell(w: dict | None) -> str:
     if not w:
         return "-"
     if w.get("candidate"):
-        return f"⚑ 达标（{w['days']}日 {fmt_amt(w['net_total'])}）"
+        return f"⚑ 达标（上榜{w['days']}日 {fmt_amt(w['net_total'])}）"
     if (w.get("streak") or 0) >= 2:
         return f"连榜 {w['streak']} 日"
     if (w.get("days") or 0) >= 2:
-        return f"累计 {w['days']} 日"
+        return f"上榜 {w['days']} 日"
     return "新面孔"
 
 
@@ -246,7 +248,8 @@ def to_markdown(r: dict) -> str:
     if r["top_sell_seats"]:
         A(f"## {sec.next()}、游资出货榜")
         A("")
-        A("按当日净卖出额降序。只列净卖出的票，名单后是各自那一笔的金额。")
+        A("按各票净卖出之和降序（不是席位买卖轧差，否则在别处有买入的会被压后名次）。"
+          "只列净卖出的票，名单后是各自那一笔的金额。")
         A("")
         A("| # | 游资 | 类型 | 净卖出只数 | 出货标的（各自净卖出） |")
         A("| ---: | --- | --- | ---: | --- |")
@@ -314,12 +317,12 @@ def to_markdown(r: dict) -> str:
     watch_rows = watch.get("rows") or {}
     cands = watch.get("candidates") or []
     if unknown or cands:
-        A(f"## {sec.next()}、未收录席位大额买入")
+        A(f"## {sec.next()}、未收录席位动向")
         A("")
         A("尚未进入别名库的营业部，往往是还没被命名的游资。系统按交易日累积它们"
-          f"的上榜记录（单日净买入 {fmt_amt(MIN_NET, False)} 以上才计入，当前池内 "
-          f"{watch.get('pool_size', 0)} 家），累计满 {CAND_DAYS} 日且净买入过 "
-          f"{fmt_amt(CAND_NET, False)} 会列为候选。")
+          f"的上榜记录（单日净买入 {fmt_amt(MIN_NET, False)} 以上才入池，当前池内 "
+          f"{watch.get('pool_size', 0)} 家）：入池后每天买卖都记，累计上榜满 "
+          f"{CAND_DAYS} 个交易日、净额过 {fmt_amt(CAND_NET, False)} 列为候选。")
         A("")
         if cands:
             total = watch.get("candidate_total", len(cands))
@@ -327,11 +330,20 @@ def to_markdown(r: dict) -> str:
               "`data/youzi_seats.json`，下次上榜即按已知席位统计）")
             A("")
             for c in cands:
-                when = "今日仍在榜" if c.get("active_today") else f"上次 {c.get('last_seen')}"
+                tn = c.get("today_net")
+                if c.get("active_today"):
+                    when = f"今日 {fmt_amt(tn)}" if tn is not None else "今日仍在榜"
+                else:
+                    when = f"上次 {c.get('last_seen')}"
                 stocks = "、".join(c.get("stocks") or [])
-                tail = f"　主买 {stocks}" if stocks else ""
+                if stocks:
+                    tail = f"　主买 {stocks}"
+                elif c.get("active_today") and (tn or 0) < 0:
+                    tail = "　今日转为净卖出"
+                else:
+                    tail = ""
                 mark = "🆕 " if c.get("is_new") else ""
-                A(f"- {mark}**{c['alias']}**　{c['days']} 日 "
+                A(f"- {mark}**{c['alias']}**　上榜{c['days']}日 "
                   f"{fmt_amt(c['net_total'])}（首次 {c.get('first_seen')}，{when}）{tail}")
             if total > len(cands):
                 A(f"- 另有 {total - len(cands)} 家，跑 `python tools/audit_seats.py` 看全部")
@@ -507,10 +519,12 @@ def to_feishu_card(r: dict) -> dict:
     live = [c for c in (w.get("candidates") or []) if c.get("active_today")]
     if live:
         lines = [f"**👀 待确认的新面孔**（累计 {w.get('candidate_total', len(live))} 家，"
-                 f"今日在榜 {len(live)} 家）"]
+                 f"今日 {len(live)} 家有异动）"]
         for c in live[:3]:
-            lines.append(f"· **{c['alias']}** 累计 {c['days']}日 "
-                         f"{_feishu_amt(c['net_total'])}")
+            tn = c.get("today_net")
+            suffix = f"，今日 {_feishu_amt(tn)}" if tn is not None else ""
+            lines.append(f"· **{c['alias']}** 上榜{c['days']}日 "
+                         f"{_feishu_amt(c['net_total'])}{suffix}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 

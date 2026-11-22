@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src import analyze, eastmoney  # noqa: E402
+from src import analyze, eastmoney, watchlist  # noqa: E402
 
 
 def y(v):
@@ -52,9 +52,14 @@ def main(td=None):
         print(f"  {s['name']} {s['change']:+.2f}% 游资{y(s['youzi_net'])} "
               f"机构{y(s['inst_net'])} 北向{y(s['north_net'])}")
 
-    print("\n=== 板块 ===")
-    for s in r["sectors"][:6]:
-        print(f"  {s['industry']:<12}游资{y(s['youzi_net'])} {s['count']}只")
+    print("\n=== 未收录观察池 ===")
+    pool = watchlist.load()
+    seats = pool.get("seats") or {}
+    cands = [v for v in seats.values() if v.get("candidate")]
+    print(f"  池内 {len(seats)} 家，其中候选 {len(cands)} 家（只读，不累积）")
+    for k, v in sorted(seats.items(), key=lambda kv: -kv[1].get("net_total", 0))[:8]:
+        print(f"  {k:<26}{y(v.get('net_total', 0)):>9} 上榜{v.get('days', 0)}日 "
+              f"连{v.get('streak', 0)} {'⚑候选' if v.get('candidate') else ''}")
 
     print("\n=== 连板梯队 ===")
     for t in r["ladder"]["tiers"][:4]:

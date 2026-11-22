@@ -59,7 +59,7 @@ def save(pool: dict) -> Path:
     WATCH_FILE.parent.mkdir(parents=True, exist_ok=True)
     WATCH_FILE.write_text(
         json.dumps(pool, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
     return WATCH_FILE
 
@@ -118,15 +118,17 @@ def merge(pool: dict, td: str, rows: list[dict], days: list[str]) -> tuple[dict,
 
     for r in rows:
         net = float(r.get("net") or 0)
-        if net < MIN_NET:
-            # 只盯净买入：净卖出的新面孔不属于「可能的新游资」这条线，
-            # 真要看也在出货榜里，不该让它占池子
-            continue
         alias = r.get("alias") or ""
         if not alias:
             continue
-        node = seats.get(alias) or _new_node(td)
-        seats[alias] = node
+        node = seats.get(alias)
+        if node is None:
+            # 新席位只有大额净买入才值得建条目。一旦入池，买卖都要记——
+            # 只记净买入日的话，「累计」等于买入日金额之和、卖出日全被跳过，
+            # 一个边买边卖的席位会越看越像在加仓，金额也是虚高的。
+            if net < MIN_NET:
+                continue
+            node = seats[alias] = _new_node(td)
         node["date_net"][td] = round(net)          # 按日覆盖，重跑不翻倍
         node["last_seen"] = max(td, node.get("last_seen") or td)
         node["first_seen"] = min(td, node.get("first_seen") or td)
@@ -210,11 +212,13 @@ def annotate(result: dict, pool: dict, td: str, newly: list[str]) -> None:
 
     # 候选一旦达标就一直挂着，直到人工处理。只报「今日新晋」的话，漏看
     # 一天报告就再也看不到这条线索了；而这个线索的价值恰恰在于别错过。
+    new_set = set(newly)
     cands = []
     for k, v in seats.items():
         if not v.get("candidate"):
             continue
         today = (v.get("recent") or {}).get(td) or []
+        today_net = (v.get("date_net") or {}).get(td)
         cands.append({
             "alias": k,
             "days": v.get("days", 0),
@@ -223,11 +227,22 @@ def annotate(result: dict, pool: dict, td: str, newly: list[str]) -> None:
             "first_seen": v.get("first_seen"),
             "last_seen": v.get("last_seen"),
             "names": v.get("names") or [],
-            "stocks": [x[1] for x in today][:4],
-            "is_new": k in set(newly),
+            # 当天是净卖出的话，标的串里排第一的是卖得最多的票，不能标成「主买」
+            "stocks": [x[1] for x in today][:4] if (today_net or 0) > 0 else [],
+            "today_net": today_net,
+            "is_new": k in new_set,
             "active_today": v.get("last_seen") == td,
         })
-    cands.sort(key=lambda x: -x["net_total"])
+    # 排序：今日还在买的排前面，今天已经反手卖的排最后。
+    # 都按净额排的话，一个「历史买 3.5 亿、今天卖 6000 万」的席位会顶在
+    # 首位，看着最像新游资，实际最该观望。
+    def _rank(c: dict) -> int:
+        tn = c.get("today_net")
+        if tn is None:
+            return 1
+        return 0 if tn > 0 else 2
+
+    cands.sort(key=lambda x: (_rank(x), -x["net_total"]))
 
     result["watch"] = {
         "available": bool(seats),

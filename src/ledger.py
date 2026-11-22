@@ -56,5 +56,5 @@ def record(trade_date: str, **info) -> None:
     LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
     LEDGER_PATH.write_text(
         json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
