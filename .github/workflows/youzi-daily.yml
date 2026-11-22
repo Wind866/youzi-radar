@@ -1,0 +1,91 @@
+name: 游资动向日报
+
+on:
+  schedule:
+    # 北京时间 18:30 = UTC 10:30，龙虎榜一般在 17:30-18:00 披露完毕
+    - cron: "30 10 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "交易日 YYYY-MM-DD，留空取最近交易日"
+        required: false
+        default: ""
+      force:
+        description: "忽略休市判断，强制生成推送"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: youzi-daily
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 生成报告并推送飞书
+        env:
+          TZ: Asia/Shanghai
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
+          RUN_DATE: ${{ inputs.date }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          ARGS=""
+          if [ -n "$RUN_DATE" ]; then
+            ARGS="--date $RUN_DATE"
+          elif [ "$FORCE" != "true" ]; then
+            ARGS="--skip-if-stale"
+          fi
+          echo "运行参数: $ARGS"
+          python -m src.main $ARGS
+
+      - name: 归档当日报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: youzi-report-${{ github.run_id }}
+          path: reports/*.md
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: 提交历史快照
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history reports 2>/dev/null || true
+          [ -f data/industry_cache.json ] && git add data/industry_cache.json || true
+          if git diff --cached --quiet; then
+            echo "无变更，跳过提交"
+            exit 0
+          fi
+          git commit -m "chore: 游资日报 $(TZ=Asia/Shanghai date +%Y-%m-%d)"
+          for i in 1 2 3; do
+            if git push; then
+              echo "推送成功"
+              exit 0
+            fi
+            echo "推送失败，第 $i 次重试"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
+            sleep 5
+          done
+          echo "多次重试后仍失败"
+          exit 1
