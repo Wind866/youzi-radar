@@ -231,8 +231,10 @@ def _build_ladder(pool: list[dict]) -> dict:
     out = []
     for b in sorted(tiers, reverse=True):
         out.append({"board": b, "count": len(tiers[b]), "stocks": tiers[b]})
+    above = {b: v for b, v in tiers.items() if b >= 2}
     return {
         "total": len(pool),
+        "total_2plus": sum(len(v) for v in above.values()),
         "max_board": max(tiers) if tiers else 0,
         "tiers": out,
         "broken": sum(1 for z in pool if (z.get("zbc") or 0) > 0),
@@ -316,6 +318,10 @@ def _continuity(today_seats: dict[str, dict], today_stocks: list[dict], history:
             "today_net": s["youzi_net"],
             "total_net": (h["net"] if h else 0.0) + s["youzi_net"],
             "change": s["change"], "industry": s["industry"],
+            # 只说「连续被买」不够用，得交代是谁在持续买
+            "buyers": [{"alias": b["alias"], "net": b["net"], "tier": b.get("tier")}
+                       for b in (s.get("buyers") or [])[:4]],
+            "buyer_count": len(s.get("buyers") or []),
         })
     stock_persist.sort(key=lambda x: -x["total_net"])
 

@@ -70,6 +70,34 @@ def _neg_amt(v: float) -> str:
     return "-" + fmt_amt(abs(v), sign=False)
 
 
+def _buyer_brief(buyers: list[dict], limit: int = 3) -> str:
+    """抱团榜的参与游资串：别名 + 各自净买入额。
+
+    抱团榜里「游资净额」是买卖轧差后的结果，只看这一个数字分不清是
+    四家均摊还是一主三从。带上各自金额，才看得出谁是真主力。
+    """
+    out = []
+    for b in buyers[:limit]:
+        out.append(f"{b['alias']} {fmt_amt(b['net'])}")
+    return "、".join(out) or "-"
+
+
+def _sell_stocks(node: dict) -> list[dict]:
+    """出货榜的标的口径：只保留净卖出的票，净买入的不能算「出货」。"""
+    return [s for s in node["stocks"] if s["net"] < 0]
+
+
+def _sell_count(node: dict) -> int:
+    return len({s["code"] for s in _sell_stocks(node)})
+
+
+def _huddle_count(node: dict) -> str:
+    """买家/卖家家数。有卖家时必须写出来，否则买家金额加总对不上净额。"""
+    if node.get("out_count"):
+        return f"{node['in_count']}买/{node['out_count']}卖"
+    return f"{node['in_count']}买"
+
+
 def _stock_brief(stocks: list[dict], limit: int = 3, colored: bool = False) -> str:
     """席位名下的标的串：名称 + 该席位在此股上的净买卖金额 + 涨跌幅。
 
@@ -140,13 +168,14 @@ def to_markdown(r: dict) -> str:
     if r["huddle"]:
         A(f"## {sec.next()}、抱团合力榜")
         A("")
-        A("多路游资同时净买入的个股，家数越多说明分歧越小。")
+        A("多路游资同时净买入的个股，家数越多说明分歧越小。名单后面是各家自己的净买入额——")
+        A("抱团不等于同心，有人买的同时也可能有人在卖，家数按「买/卖」分开列。")
         A("")
-        A("| 股票 | 涨幅 | 游资净额 | 买家数 | 参与游资 |")
+        A("| 股票 | 涨幅 | 游资净额 | 家数 | 主力买家（各自净买入） |")
         A("| --- | ---: | ---: | ---: | --- |")
         for s in r["huddle"]:
             A(f"| {s['name']}({s['code']}) | {fmt_pct(s['change'])} | {fmt_amt(s['youzi_net'])} | "
-              f"{s['in_count']} | {', '.join(b['alias'] for b in s['buyers'][:5])} |")
+              f"{_huddle_count(s)} | {_buyer_brief(s['buyers'], 4)} |")
         A("")
 
     buys = sorted([s for s in r["stocks"] if s["youzi_net"] > 0],
@@ -160,10 +189,10 @@ def to_markdown(r: dict) -> str:
         if buys:
             A("**净买入 TOP10**")
             A("")
-            A("| # | 股票 | 涨幅 | 游资净额 | 买入额 | 卖出额 | 参与游资 |")
+            A("| # | 股票 | 涨幅 | 游资净额 | 买入额 | 卖出额 | 参与游资（各自净买入） |")
             A("| ---: | --- | ---: | ---: | ---: | ---: | --- |")
             for i, s in enumerate(buys, 1):
-                who = ", ".join(b["alias"] for b in s["buyers"][:3]) or "-"
+                who = _buyer_brief(s["buyers"], 3)
                 A(f"| {i} | {s['name']}({s['code']}) | {fmt_pct(s['change'])} | "
                   f"{fmt_amt(s['youzi_net'])} | {fmt_amt(s['youzi_buy'])} | "
                   f"{_neg_amt(s['youzi_sell'])} | {who} |")
@@ -171,10 +200,10 @@ def to_markdown(r: dict) -> str:
         if sells:
             A("**净卖出 TOP10**")
             A("")
-            A("| # | 股票 | 涨幅 | 游资净额 | 买入额 | 卖出额 | 出货游资 |")
+            A("| # | 股票 | 涨幅 | 游资净额 | 买入额 | 卖出额 | 出货游资（各自净卖出） |")
             A("| ---: | --- | ---: | ---: | ---: | ---: | --- |")
             for i, s in enumerate(sells, 1):
-                who = ", ".join(b["alias"] for b in s["sellers"][:3]) or "-"
+                who = _buyer_brief(s["sellers"], 3)
                 A(f"| {i} | {s['name']}({s['code']}) | {fmt_pct(s['change'])} | "
                   f"{fmt_amt(s['youzi_net'])} | {fmt_amt(s['youzi_buy'])} | "
                   f"{_neg_amt(s['youzi_sell'])} | {who} |")
@@ -183,11 +212,13 @@ def to_markdown(r: dict) -> str:
     if r["top_sell_seats"]:
         A(f"## {sec.next()}、游资出货榜")
         A("")
-        A("| # | 游资 | 类型 | 净额 | 出货标的 |")
+        A("按当日净卖出额降序。只列净卖出的票，名单后是各自那一笔的金额。")
+        A("")
+        A("| # | 游资 | 类型 | 净卖出只数 | 出货标的（各自净卖出） |")
         A("| ---: | --- | --- | ---: | --- |")
         for i, n in enumerate(r["top_sell_seats"], 1):
-            A(f"| {i} | {n['alias']} | {_tag_text(n)} | {fmt_amt(n['net'])} | "
-              f"{_stock_brief(n['stocks'])} |")
+            A(f"| {i} | {n['alias']} | {_tag_text(n)} | {_sell_count(n)} | "
+              f"{_stock_brief(_sell_stocks(n), 4)} |")
         A("")
 
     limbo = r.get("limbo") or []
@@ -219,29 +250,17 @@ def to_markdown(r: dict) -> str:
               f"{fmt_amt(s['inst_net'])} | {fmt_amt(s['north_net'])} | {note} |")
         A("")
 
-    if r["sectors"]:
-        A(f"## {sec.next()}、板块资金流向")
-        A("")
-        A("| 板块 | 游资净额 | 上榜数 | 龙头 |")
-        A("| --- | ---: | ---: | --- |")
-        for s in r["sectors"][:10]:
-            if abs(s["youzi_net"]) < 1e7:
-                continue
-            lead = s["stocks"][0] if s["stocks"] else None
-            lead_txt = f"{lead['name']}({fmt_amt(lead['net'])})" if lead else "-"
-            A(f"| {s['industry']} | {fmt_amt(s['youzi_net'])} | {s['count']} | {lead_txt} |")
-        A("")
-
     lad = r["ladder"]
-    if lad["tiers"]:
+    boards = [t for t in lad["tiers"] if t["board"] >= 2]
+    if boards:
         A(f"## {sec.next()}、连板梯队")
         A("")
-        A(f"涨停 **{lad['total']}** 只，最高 **{lad['max_board']}** 板，炸板 **{lad['broken']}** 只")
+        A(f"2 板以上 **{lad.get('total_2plus', 0)}** 只，最高 **{lad['max_board']}** 板　"
+          f"（当日涨停 {lad['total']} 只，首板 {lad['total'] - lad.get('total_2plus', 0)} 只，"
+          f"炸板 {lad['broken']} 只）")
         A("")
-        for t in lad["tiers"]:
-            if t["board"] < 2:
-                continue
-            names = "、".join(f"{x['name']}({x['industry']})" for x in t["stocks"][:12])
+        for t in boards:
+            names = "、".join(f"{x['name']}({x['industry']})" for x in t["stocks"])
             A(f"- **{t['board']} 板**（{t['count']} 只）：{names}")
         A("")
 
@@ -286,11 +305,12 @@ def to_markdown(r: dict) -> str:
         if c.get("persistent_stocks"):
             A("**持续被游资买入的个股**")
             A("")
-            A("| 股票 | 今日净额 | 累计净额 | 连续天数 |")
-            A("| --- | ---: | ---: | ---: |")
+            A("| 股票 | 今日净额 | 累计净额 | 连续天数 | 今日买入席位（各自净买入） |")
+            A("| --- | ---: | ---: | ---: | --- |")
             for s in c["persistent_stocks"]:
                 A(f"| {s['name']}({s['code']}) | {fmt_amt(s['today_net'])} | "
-                  f"{fmt_amt(s['total_net'])} | {s['days']} |")
+                  f"{fmt_amt(s['total_net'])} | {s['days']} | "
+                  f"{_buyer_brief(s.get('buyers') or [], 3)} |")
             A("")
         if c.get("fresh_seats"):
             A("**今日新进大额席位**：" + "、".join(
@@ -365,18 +385,20 @@ def to_feishu_card(r: dict) -> dict:
         for s in r["huddle"][:3]:
             c = "red" if s["change"] > 0 else "green"
             lines.append(f"· **{s['name']}** {_mk(c, fmt_pct(s['change']))} "
-                         f"游资 {_feishu_amt(s['youzi_net'])}　{s['in_count']}家\n"
-                         f"　{', '.join(b['alias'] for b in s['buyers'][:4])}")
+                         f"游资 {_feishu_amt(s['youzi_net'])}　{_huddle_count(s)}\n"
+                         f"　{_buyer_brief(s['buyers'], 4)}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 
     # 出货
     sells = [n for n in r["top_sell_seats"] if n["net"] < 0][:3]
     if sells:
-        lines = ["**⚠️ 游资出货**"]
+        lines = ["**⚠️ 游资出货**（按净卖出额排序，金额为各自在单只票上的净卖出）"]
         for n in sells:
-            tags = "、".join(f"{s['name']}{fmt_amt(s['net'])}" for s in n["stocks"][:3])
-            lines.append(f"· **{n['alias']}** {_feishu_amt(n['net'])}　{tags}")
+            outs = _sell_stocks(n)
+            tags = "、".join(f"{s['name']} {fmt_amt(s['net'])}" for s in outs[:3])
+            cnt = _sell_count(n)
+            lines.append(f"· **{n['alias']}**{f'　{cnt}只' if cnt > 1 else ''}\n　{tags}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 
@@ -387,29 +409,20 @@ def to_feishu_card(r: dict) -> dict:
         for s in dumps:
             c = "red" if s["change"] > 0 else "green"
             lines.append(f"· **{s['name']}** {_feishu_amt(s['youzi_net'])} "
-                         f"{_mk(c, fmt_pct(s['change']))}")
+                         f"{_mk(c, fmt_pct(s['change']))}\n"
+                         f"　{_buyer_brief(s['sellers'], 3)}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 
-    # 连板梯队
+    # 连板梯队（只统计 2 板以上，个股全列）
     lad = r["ladder"]
-    if lad["tiers"]:
-        parts = [f"**{t['board']}板** {t['count']}只" for t in lad["tiers"] if t["board"] >= 2][:4]
-        top = lad["tiers"][0]["stocks"][0] if lad["tiers"] else None
-        txt = f"**📈 连板梯队**　涨停 {lad['total']} 只，最高 {lad['max_board']} 板"
-        if parts:
-            txt += "\n" + "　".join(parts)
-        if top:
-            txt += f"\n龙头：**{top['name']}**（{top['industry']}）"
-        els.append(div(txt))
-        els.append({"tag": "hr"})
-
-    # 板块
-    sectors = [s for s in r["sectors"] if abs(s["youzi_net"]) >= 1e7][:3]
-    if sectors:
-        lines = ["**🧭 板块资金**"]
-        for s in sectors:
-            lines.append(f"· {s['industry']} {_feishu_amt(s['youzi_net'])}（{s['count']}只）")
+    boards = [t for t in lad["tiers"] if t["board"] >= 2]
+    if boards:
+        lines = [f"**📈 连板梯队**　2板以上 {lad.get('total_2plus', 0)} 只，"
+                 f"最高 {lad['max_board']} 板（首板 {lad['total'] - lad.get('total_2plus', 0)} 只）"]
+        for t in boards:
+            names = "、".join(x["name"] for x in t["stocks"])
+            lines.append(f"**{t['board']}板**（{t['count']}）　{names}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 
@@ -418,8 +431,10 @@ def to_feishu_card(r: dict) -> dict:
     if c.get("available") and (c.get("persistent_stocks") or c.get("persistent_seats")):
         lines = [f"**🔁 连续追踪**（近{c['days'] + 1}日）"]
         for s in (c.get("persistent_stocks") or [])[:3]:
-            lines.append(f"· {s['name']} 连续{s['days']}日被游资买入 "
-                         f"累计 {_feishu_amt(s['total_net'])}")
+            who = _buyer_brief(s.get("buyers") or [], 3)
+            line = (f"· {s['name']} 连续{s['days']}日被游资买入 "
+                    f"累计 {_feishu_amt(s['total_net'])}")
+            lines.append(line + (f"\n　{who}" if who else ""))
         for n in (c.get("persistent_seats") or [])[:2]:
             lines.append(f"· {n['alias']} 连续{n['days']}日加仓 "
                          f"累计 {_feishu_amt(n['total_net'])}")
