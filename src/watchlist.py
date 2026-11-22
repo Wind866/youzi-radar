@@ -18,6 +18,8 @@ import json
 import logging
 from pathlib import Path
 
+from . import seats as seatlib
+
 ROOT = Path(__file__).resolve().parent.parent
 WATCH_FILE = ROOT / "data" / "seat_watchlist.json"
 HISTORY_DIR = ROOT / "history"
@@ -154,6 +156,16 @@ def merge(pool: dict, td: str, rows: list[dict], days: list[str]) -> tuple[dict,
     return pool, newly
 
 
+def _known_aliases() -> set[str]:
+    """别名库里已有的席位简称。
+
+    人工把候选写进规则库之后，它就不再是 other、也不会再进 other_seats，
+    池子里那条从此收不到更新；不主动剔除的话，「待确认」里会一直挂着这个
+    已经处理过的名字，直到 120 天后被清理。
+    """
+    return {r["alias"] for r in seatlib.load_rules()}
+
+
 def _offset(days: list[str], n: int) -> str:
     """往前数 n 个交易日的日期；日期不够长就返回最早那天（等于不清理）。"""
     if not days:
@@ -174,8 +186,11 @@ def _prune(pool: dict, days: list[str]) -> None:
     old_cut = _offset(days, STALE_DAYS)
     hard_cut = _offset(days, HARD_DAYS)
 
-    drop = []
+    known = _known_aliases()
+    drop = [k for k in seats if k in known]
     for k, v in seats.items():
+        if k in known:
+            continue
         net = abs(v.get("net_total") or 0)
         seen = v.get("last_seen") or ""
         if net >= STALE_NET or (v.get("days") or 0) >= 2:
@@ -188,7 +203,8 @@ def _prune(pool: dict, days: list[str]) -> None:
         seats.pop(k, None)
 
     if drop:
-        logging.info("观察池清理 %s 条（久未上榜且金额不大），保留 %s 条", len(drop), len(seats))
+        logging.info("观察池清理 %s 条（已入库 / 久未上榜 / 金额不大），保留 %s 条",
+                     len(drop), len(seats))
     if len(seats) > MAX_ENTRIES:
         keep = sorted(seats.items(), key=lambda kv: -abs(kv[1].get("net_total") or 0))
         pool["seats"] = dict(keep[:MAX_ENTRIES])
@@ -213,9 +229,10 @@ def annotate(result: dict, pool: dict, td: str, newly: list[str]) -> None:
     # 候选一旦达标就一直挂着，直到人工处理。只报「今日新晋」的话，漏看
     # 一天报告就再也看不到这条线索了；而这个线索的价值恰恰在于别错过。
     new_set = set(newly)
+    known = _known_aliases()
     cands = []
     for k, v in seats.items():
-        if not v.get("candidate"):
+        if not v.get("candidate") or k in known:
             continue
         today = (v.get("recent") or {}).get(td) or []
         today_net = (v.get("date_net") or {}).get(td)
