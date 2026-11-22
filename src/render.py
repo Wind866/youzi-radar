@@ -168,14 +168,15 @@ def to_markdown(r: dict) -> str:
     if r["huddle"]:
         A(f"## {sec.next()}、抱团合力榜")
         A("")
-        A("多路游资同时净买入的个股，家数越多说明分歧越小。名单后面是各家自己的净买入额——")
-        A("抱团不等于同心，有人买的同时也可能有人在卖，家数按「买/卖」分开列。")
+        A("多路游资同时净买入的个股，家数越多说明分歧越小。买方卖方都列出来——")
+        A("抱团不等于同心，同一只票上常有一边在扫货、一边在撤退。")
         A("")
-        A("| 股票 | 涨幅 | 游资净额 | 家数 | 主力买家（各自净买入） |")
-        A("| --- | ---: | ---: | ---: | --- |")
+        A("| 股票 | 涨幅 | 游资净额 | 家数 | 买方（各自净买入） | 卖方（各自净卖出） |")
+        A("| --- | ---: | ---: | ---: | --- | --- |")
         for s in r["huddle"]:
+            sell_txt = _buyer_brief(s["sellers"], 3) if s.get("sellers") else "-"
             A(f"| {s['name']}({s['code']}) | {fmt_pct(s['change'])} | {fmt_amt(s['youzi_net'])} | "
-              f"{_huddle_count(s)} | {_buyer_brief(s['buyers'], 4)} |")
+              f"{_huddle_count(s)} | {_buyer_brief(s['buyers'], 4)} | {sell_txt} |")
         A("")
 
     buys = sorted([s for s in r["stocks"] if s["youzi_net"] > 0],
@@ -384,9 +385,11 @@ def to_feishu_card(r: dict) -> dict:
         lines = ["**🤝 抱团合力**（多路资金同时买入）"]
         for s in r["huddle"][:3]:
             c = "red" if s["change"] > 0 else "green"
+            body = f"　买：{_buyer_brief(s['buyers'], 4)}"
+            if s.get("sellers"):
+                body += f"\n　卖：{_buyer_brief(s['sellers'], 3)}"
             lines.append(f"· **{s['name']}** {_mk(c, fmt_pct(s['change']))} "
-                         f"游资 {_feishu_amt(s['youzi_net'])}　{_huddle_count(s)}\n"
-                         f"　{_buyer_brief(s['buyers'], 4)}")
+                         f"游资 {_feishu_amt(s['youzi_net'])}　{_huddle_count(s)}\n{body}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 
