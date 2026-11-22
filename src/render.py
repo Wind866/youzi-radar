@@ -63,16 +63,31 @@ def _tag_text(node: dict) -> str:
     return "·".join(tags[:2])
 
 
+def _neg_amt(v: float) -> str:
+    """卖出额按负号显示：净额表里 +买入 / -卖出 才对得上，否则容易被读成流入。"""
+    if not v:
+        return "-"
+    return "-" + fmt_amt(abs(v), sign=False)
+
+
 def _stock_brief(stocks: list[dict], limit: int = 3, colored: bool = False) -> str:
+    """席位名下的标的串：名称 + 该席位在此股上的净买卖金额 + 涨跌幅。
+
+    只要该席位在这只票上有净买卖，就必须带上金额——只给涨跌幅的话，
+    看不出这只票到底是主攻还是顺手做的，也分不出仓位轻重。
+    """
     out = []
     for s in stocks[:limit]:
         name = s.get("name") or s.get("code")
         chg = s.get("change", 0)
+        amt = s.get("net")
         if colored:
             c = "red" if chg > 0 else "green"
-            out.append(f"{name}{_mk(c, f'{chg:+.1f}%')}")
+            pct = _mk(c, f"{chg:+.1f}%")
+            out.append(f"{name} {_feishu_amt(amt)} {pct}" if amt is not None else f"{name}{pct}")
         else:
-            out.append(f"{name}({chg:+.1f}%)")
+            out.append(f"{name}({chg:+.1f}% {fmt_amt(amt)})" if amt is not None
+                       else f"{name}({chg:+.1f}%)")
     return " ".join(out)
 
 
@@ -133,6 +148,37 @@ def to_markdown(r: dict) -> str:
             A(f"| {s['name']}({s['code']}) | {fmt_pct(s['change'])} | {fmt_amt(s['youzi_net'])} | "
               f"{s['in_count']} | {', '.join(b['alias'] for b in s['buyers'][:5])} |")
         A("")
+
+    buys = sorted([s for s in r["stocks"] if s["youzi_net"] > 0],
+                  key=lambda s: -s["youzi_net"])[:10]
+    sells = (r.get("dump") or [])[:10]
+    if buys or sells:
+        A(f"## {sec.next()}、个股净买卖榜")
+        A("")
+        A("按个股汇总当日游资净额，看得出资金到底砸向哪只票、又从哪只票撤。")
+        A("")
+        if buys:
+            A("**净买入 TOP10**")
+            A("")
+            A("| # | 股票 | 涨幅 | 游资净额 | 买入额 | 卖出额 | 参与游资 |")
+            A("| ---: | --- | ---: | ---: | ---: | ---: | --- |")
+            for i, s in enumerate(buys, 1):
+                who = ", ".join(b["alias"] for b in s["buyers"][:3]) or "-"
+                A(f"| {i} | {s['name']}({s['code']}) | {fmt_pct(s['change'])} | "
+                  f"{fmt_amt(s['youzi_net'])} | {fmt_amt(s['youzi_buy'])} | "
+                  f"{_neg_amt(s['youzi_sell'])} | {who} |")
+            A("")
+        if sells:
+            A("**净卖出 TOP10**")
+            A("")
+            A("| # | 股票 | 涨幅 | 游资净额 | 买入额 | 卖出额 | 出货游资 |")
+            A("| ---: | --- | ---: | ---: | ---: | ---: | --- |")
+            for i, s in enumerate(sells, 1):
+                who = ", ".join(b["alias"] for b in s["sellers"][:3]) or "-"
+                A(f"| {i} | {s['name']}({s['code']}) | {fmt_pct(s['change'])} | "
+                  f"{fmt_amt(s['youzi_net'])} | {fmt_amt(s['youzi_buy'])} | "
+                  f"{_neg_amt(s['youzi_sell'])} | {who} |")
+            A("")
 
     if r["top_sell_seats"]:
         A(f"## {sec.next()}、游资出货榜")
@@ -306,7 +352,7 @@ def to_feishu_card(r: dict) -> dict:
         if n["net"] <= 0 or rank >= 6:
             break
         rank += 1
-        stocks = "、".join(f"{s['name']}" for s in n["stocks"][:3])
+        stocks = "、".join(f"{s['name']}{fmt_amt(s['net'])}" for s in n["stocks"][:3])
         tag = _tag_text(n)
         lines.append(f"{rank}. **{n['alias']}**{f'（{tag}）' if tag else ''} "
                      f"{_feishu_amt(n['net'])}　{n['stock_count']}只\n　　{stocks}")
@@ -329,8 +375,19 @@ def to_feishu_card(r: dict) -> dict:
     if sells:
         lines = ["**⚠️ 游资出货**"]
         for n in sells:
-            lines.append(f"· **{n['alias']}** {_feishu_amt(n['net'])}　"
-                         f"{'、'.join(s['name'] for s in n['stocks'][:3])}")
+            tags = "、".join(f"{s['name']}{fmt_amt(s['net'])}" for s in n["stocks"][:3])
+            lines.append(f"· **{n['alias']}** {_feishu_amt(n['net'])}　{tags}")
+        els.append(div("\n".join(lines)))
+        els.append({"tag": "hr"})
+
+    # 个股净卖出（席位维度之外的补充：哪只票在被资金撤离）
+    dumps = (r.get("dump") or [])[:4]
+    if dumps:
+        lines = ["**📉 个股净卖出**"]
+        for s in dumps:
+            c = "red" if s["change"] > 0 else "green"
+            lines.append(f"· **{s['name']}** {_feishu_amt(s['youzi_net'])} "
+                         f"{_mk(c, fmt_pct(s['change']))}")
         els.append(div("\n".join(lines)))
         els.append({"tag": "hr"})
 
