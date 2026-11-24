@@ -1,0 +1,1527 @@
+{
+ "trade_date": "2026-11-24",
+ "seats": [
+  {
+   "alias": "沪股通",
+   "net": 757312067.43,
+   "tier": "north",
+   "stock_count": 12
+  },
+  {
+   "alias": "券商总部",
+   "net": 581001699.66,
+   "tier": "quant",
+   "stock_count": 19
+  },
+  {
+   "alias": "东莞苏州聚茂街",
+   "net": -439083402.2,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "安贞门",
+   "net": 312027528.01,
+   "tier": "hot",
+   "stock_count": 7
+  },
+  {
+   "alias": "江苏路",
+   "net": 227429273.49,
+   "tier": "top",
+   "stock_count": 14
+  },
+  {
+   "alias": "开源五鬼",
+   "net": 223889571.17,
+   "tier": "quant",
+   "stock_count": 8
+  },
+  {
+   "alias": "民生慈溪影清路",
+   "net": -208720048.61,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中小投资者",
+   "net": 195149389.55,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "民生宁波",
+   "net": -169505686.44,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "宁波财神殿",
+   "net": -165944136.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "深股通",
+   "net": -163911729.22,
+   "tier": "north",
+   "stock_count": 17
+  },
+  {
+   "alias": "国信浙江互联网",
+   "net": 161349104.98,
+   "tier": "quant",
+   "stock_count": 14
+  },
+  {
+   "alias": "国新北京",
+   "net": -140685026.1,
+   "tier": "hot",
+   "stock_count": 5
+  },
+  {
+   "alias": "摩根",
+   "net": 133370730.64,
+   "tier": "foreign",
+   "stock_count": 12
+  },
+  {
+   "alias": "高盛",
+   "net": 117514200.2,
+   "tier": "foreign",
+   "stock_count": 14
+  },
+  {
+   "alias": "孙哥",
+   "net": -114237761.71,
+   "tier": "top",
+   "stock_count": 8
+  },
+  {
+   "alias": "华泰上海浦东新区世纪大道",
+   "net": 100064480.7,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "东吴宁波前河南路",
+   "net": -95953747.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华鑫上海金山",
+   "net": 92632626.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东方杭州龙井路",
+   "net": 79994616.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "拉萨天团",
+   "net": 75237236.39,
+   "tier": "retail",
+   "stock_count": 22
+  },
+  {
+   "alias": "国泰海通上海自贸试验区第二",
+   "net": -67490438.0,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "华鑫深圳",
+   "net": 66571154.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安浙江",
+   "net": 66471965.6,
+   "tier": "other",
+   "stock_count": 4
+  },
+  {
+   "alias": "华鑫上海徐汇区瑞平路",
+   "net": -66287098.01,
+   "tier": "other",
+   "stock_count": 7
+  },
+  {
+   "alias": "成都帮",
+   "net": 65494728.76,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "陈小群",
+   "net": -62382693.49,
+   "tier": "top",
+   "stock_count": 2
+  },
+  {
+   "alias": "华鑫陆家嘴",
+   "net": 61557505.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "信达沈阳北陵大街",
+   "net": -61299713.26,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "瑞银",
+   "net": -60755959.8,
+   "tier": "foreign",
+   "stock_count": 8
+  },
+  {
+   "alias": "连云港巨龙南路",
+   "net": -54304423.36,
+   "tier": "hot",
+   "stock_count": 2
+  },
+  {
+   "alias": "国盛杭州建设三路",
+   "net": -51719915.6,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国金宁波江澄南路",
+   "net": -50708756.48,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "长城长沙五一中路",
+   "net": 50467601.05,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国信杭州",
+   "net": -48205591.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通深圳红荔西路",
+   "net": -48137946.17,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "青岛香港中路",
+   "net": 47113776.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "东亚前海深圳",
+   "net": 46759624.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "广发深圳后海",
+   "net": -46605575.6,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国元浙江",
+   "net": -45424528.19,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东方无锡梁清路",
+   "net": 44435402.55,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "玉兰路",
+   "net": -43318270.37,
+   "tier": "hot",
+   "stock_count": 2
+  },
+  {
+   "alias": "华林深圳民田路",
+   "net": -41006857.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "长江北京百万庄大街",
+   "net": -36742557.96,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "浙商金华",
+   "net": -34264735.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "章盟主",
+   "net": -31519898.3,
+   "tier": "top",
+   "stock_count": 1
+  },
+  {
+   "alias": "大渡河路",
+   "net": 31421962.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "华泰深圳彩田路",
+   "net": 30315723.03,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "财通玉环广陵路",
+   "net": -29970182.4,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河金华八一南街",
+   "net": -29659358.14,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河桂林中山中路",
+   "net": -29543022.8,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "广州系",
+   "net": 29471263.04,
+   "tier": "hot",
+   "stock_count": 5
+  },
+  {
+   "alias": "东莞东莞虎门",
+   "net": 29018219.24,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "海宁海昌南路",
+   "net": 28661361.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "温州帮",
+   "net": -28171577.06,
+   "tier": "hot",
+   "stock_count": 3
+  },
+  {
+   "alias": "中信东阳吴宁西路",
+   "net": -28083568.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "红塔昆明环城南路",
+   "net": -26946370.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "山南香曲东路",
+   "net": -26517908.2,
+   "tier": "hot",
+   "stock_count": 8
+  },
+  {
+   "alias": "东方成都万象南路",
+   "net": -26095962.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东莞河源",
+   "net": -25893229.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安深圳香蜜湖",
+   "net": 25556278.1,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "平安金华李渔路",
+   "net": 24055624.0,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "中泰莱芜府前大街",
+   "net": -23127000.8,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华金江苏",
+   "net": 23018703.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "民生上海",
+   "net": -22448732.2,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "中信北京京城大厦",
+   "net": 22169231.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国元宁波",
+   "net": -20632974.2,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通上海虹口区大连路",
+   "net": 20348079.0,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "财达深圳彩田路",
+   "net": 19533200.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国中金财富上海",
+   "net": -19396410.19,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东方财富昌都两江大道",
+   "net": -19395513.36,
+   "tier": "other",
+   "stock_count": 5
+  },
+  {
+   "alias": "华泰长沙湘江中路",
+   "net": -19174049.22,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国投上海浦东新区樱花路",
+   "net": 18851913.46,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "大小说家",
+   "net": -18809062.2,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通上海松江区中山东路",
+   "net": -18548722.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国投上海黄浦区中山南路",
+   "net": 18438587.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "广发福州古田路",
+   "net": -18338530.0,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "中金上海",
+   "net": 18102969.02,
+   "tier": "hot",
+   "stock_count": 7
+  },
+  {
+   "alias": "申万宏源深圳金田路",
+   "net": 17740359.88,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华鑫杭州",
+   "net": -16736669.12,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安深圳蛇口招商路招商大厦",
+   "net": -16369454.15,
+   "tier": "other",
+   "stock_count": 3
+  },
+  {
+   "alias": "国泰海通深圳海岸城海德三道",
+   "net": 16283632.2,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "金融街上海浦东新区成山路",
+   "net": 15278698.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "浙商绍兴",
+   "net": 15075910.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "申万宏源上海浦东新区关岳西路",
+   "net": -14449318.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "光大深圳深湾一路",
+   "net": -14339160.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "厦门仙岳路",
+   "net": -14322214.0,
+   "tier": "hot",
+   "stock_count": 2
+  },
+  {
+   "alias": "东亚前海苏州",
+   "net": -14018972.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中泰北京亦庄",
+   "net": -13473654.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东方武汉青年路",
+   "net": 13343740.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "绍兴解放大道",
+   "net": -12775920.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "长江潜江东城大道",
+   "net": -12245370.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国信北京",
+   "net": 11940184.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "财达秦皇岛迎宾路",
+   "net": -11802943.69,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "长江深圳",
+   "net": -11634792.75,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "方正长沙黄兴中路",
+   "net": -11499019.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "杭州帮",
+   "net": -11489499.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信建投湖州人民路",
+   "net": -11335907.39,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国投东北",
+   "net": -11207859.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "宁波桑田路",
+   "net": -10996168.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "中泰天津",
+   "net": -10978577.4,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "福清福和路",
+   "net": -10798484.53,
+   "tier": "hot",
+   "stock_count": 2
+  },
+  {
+   "alias": "国投阳江",
+   "net": 10679190.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安嘉兴中环南路",
+   "net": -10641938.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国信深圳互联网",
+   "net": 10625610.73,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东莞常熟东南大道",
+   "net": -10266254.56,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通上海浦东新区陆家嘴东路",
+   "net": -10265130.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通镇江长江路",
+   "net": 9981261.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国金厦门湖滨南路",
+   "net": 9920811.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "重庆民生路",
+   "net": 9152381.12,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通上海浦东新区锦康路",
+   "net": 9060232.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安泉州滨海街",
+   "net": -8613267.76,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信(山东)荣成成山大道",
+   "net": -8120760.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "招商上海牡丹江路",
+   "net": -7862949.18,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "西南洛阳西苑路",
+   "net": 7845715.15,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通重庆朝天门",
+   "net": -7501979.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东莞西安唐延路",
+   "net": -7409591.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信深圳深南中路中信大厦",
+   "net": -7201328.0,
+   "tier": "other",
+   "stock_count": 4
+  },
+  {
+   "alias": "营口路",
+   "net": 7013982.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "开源浙江",
+   "net": -6577295.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通福州五一北路",
+   "net": -6464084.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河湖州",
+   "net": 6402415.51,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "方正东阳吴宁东路",
+   "net": -6231919.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "长城宁波中山东路",
+   "net": -6103100.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "厦门帮",
+   "net": -5938020.0,
+   "tier": "hot",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通贵阳中华中路",
+   "net": -5668904.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国中金财富东莞虎门",
+   "net": -5396662.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华金浙江",
+   "net": -5374948.72,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通深圳华强北路",
+   "net": -5298203.2,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国金深圳湾一号",
+   "net": -5266761.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中航天河北路",
+   "net": -5124489.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信建投厦门杏东路",
+   "net": -4762670.44,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "华泰天津东丽开发区二纬路",
+   "net": -4508051.96,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中泰湖北",
+   "net": 4311630.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华鑫山东",
+   "net": 4268344.73,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "光大东莞南城鸿福路",
+   "net": 4218447.56,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中山浙江",
+   "net": -4132542.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华鑫江苏",
+   "net": -4099397.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河东阳十字街",
+   "net": -3854557.77,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河上海浦东新区源深路",
+   "net": 3804929.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "深圳帮",
+   "net": 3626340.45,
+   "tier": "hot",
+   "stock_count": 3
+  },
+  {
+   "alias": "平安武汉中北路",
+   "net": 3593791.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信苏州",
+   "net": 3254695.2,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国盛上饶鄱阳鄱阳湖大道",
+   "net": 3161445.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国元江西",
+   "net": -3050114.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东方重庆",
+   "net": -3000109.38,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "广发葫芦岛海辰路",
+   "net": -2910600.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中泰上海滨江大道",
+   "net": 2779044.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通深圳",
+   "net": -2636720.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华源江苏",
+   "net": -2634860.24,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "中国银河杭州长乐路",
+   "net": 2611108.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国新长沙韶山路",
+   "net": 2561220.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "诚通北京中关村东路",
+   "net": -2535663.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国信大连",
+   "net": 2484900.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "粤开深圳",
+   "net": -2471040.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "太平洋成都",
+   "net": -2259006.7,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通北京中关村南大街",
+   "net": 2234174.16,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "长城国瑞晋江东华街",
+   "net": 2219109.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华泰嘉兴纺工路",
+   "net": -2128434.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "长江上海浦东新区东明路",
+   "net": 2098906.87,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安上海锦康路",
+   "net": 2026648.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安扬州文昌西路",
+   "net": 1962581.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "浙商长沙芙蓉中路",
+   "net": -1952245.43,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信(山东)德州湖滨中大道",
+   "net": -1683419.46,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国投西安曲江池南路",
+   "net": 1670437.0,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "国海上海黄浦区中山南路",
+   "net": 1610000.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信建投上海张杨北路",
+   "net": 1610000.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信建投吉安井冈山大道",
+   "net": 1597710.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "广发昆明东风东路",
+   "net": -1574065.36,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华泰南京",
+   "net": 1536906.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安广东",
+   "net": -1500120.85,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通杭州延安路",
+   "net": 1485386.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安晋江泉安中路",
+   "net": -1439280.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信建投重庆龙山路",
+   "net": 1428484.75,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河西安唐延路",
+   "net": -1390371.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通深圳南山智谷",
+   "net": -1330200.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东莞四川",
+   "net": 1205069.29,
+   "tier": "other",
+   "stock_count": 2
+  },
+  {
+   "alias": "中信建投上海长宁天山西路",
+   "net": -1200094.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信武汉东风大道",
+   "net": -1111246.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通上海杨浦区周家嘴路",
+   "net": 990000.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通海口国兴大道",
+   "net": 925650.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国银河厦门嘉禾路",
+   "net": -915533.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "财通南通通宁大道",
+   "net": 913770.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国中金财富北京北三环东路",
+   "net": -897736.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华泰大连港兴路",
+   "net": 891990.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国金深圳",
+   "net": -844361.87,
+   "tier": "other",
+   "stock_count": 3
+  },
+  {
+   "alias": "浙商丽水",
+   "net": -779695.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中信上海徐汇区凯滨路",
+   "net": -767326.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "天府南充丝绸路",
+   "net": 740354.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国泰海通牡丹江牡丹街",
+   "net": -714495.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国金成都东城根街",
+   "net": -695000.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国中金财富株洲珠江北路",
+   "net": 529461.72,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "平安江西",
+   "net": 469906.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "申万宏源上海嘉定区塔城路",
+   "net": 32935.9,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "财通永康九铃东路",
+   "net": 32230.1,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "华林江门港口路",
+   "net": -17269.4,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "中国中金财富苏州苏绣路",
+   "net": -10220.0,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "国盛吉安",
+   "net": 6544.8,
+   "tier": "other",
+   "stock_count": 1
+  },
+  {
+   "alias": "东莞东莞东城",
+   "net": 5412.0,
+   "tier": "other",
+   "stock_count": 1
+  }
+ ],
+ "stocks": [
+  {
+   "code": "600410",
+   "name": "华胜天成",
+   "net": 265310042.48
+  },
+  {
+   "code": "600371",
+   "name": "万向德农",
+   "net": 186379217.22
+  },
+  {
+   "code": "600715",
+   "name": "文投控股",
+   "net": 169945533.22
+  },
+  {
+   "code": "002611",
+   "name": "东方精工",
+   "net": 136290677.75
+  },
+  {
+   "code": "002148",
+   "name": "北纬科技",
+   "net": -129134284.47
+  },
+  {
+   "code": "301575",
+   "name": "艾芬达",
+   "net": 123629654.0
+  },
+  {
+   "code": "002771",
+   "name": "真视通",
+   "net": -119033335.47
+  },
+  {
+   "code": "603626",
+   "name": "科森科技",
+   "net": 114680667.0
+  },
+  {
+   "code": "603662",
+   "name": "柯力传感",
+   "net": 95488275.6
+  },
+  {
+   "code": "301413",
+   "name": "安培龙",
+   "net": -90048745.1
+  },
+  {
+   "code": "301313",
+   "name": "凡拓数创",
+   "net": -88545003.5
+  },
+  {
+   "code": "605488",
+   "name": "福莱新材",
+   "net": 82544762.99
+  },
+  {
+   "code": "002242",
+   "name": "九阳股份",
+   "net": 82170650.44
+  },
+  {
+   "code": "002348",
+   "name": "高乐股份",
+   "net": 71416595.0
+  },
+  {
+   "code": "600814",
+   "name": "杭州解百",
+   "net": 71200865.35
+  },
+  {
+   "code": "603103",
+   "name": "横店影视",
+   "net": 68677954.95
+  },
+  {
+   "code": "603030",
+   "name": "全筑股份",
+   "net": 64347972.54
+  },
+  {
+   "code": "603358",
+   "name": "华达科技",
+   "net": 64101221.72
+  },
+  {
+   "code": "603666",
+   "name": "亿嘉和",
+   "net": 60386740.46
+  },
+  {
+   "code": "000530",
+   "name": "冰山冷热",
+   "net": -59598073.45
+  },
+  {
+   "code": "603324",
+   "name": "盛剑科技",
+   "net": -52931128.8
+  },
+  {
+   "code": "603040",
+   "name": "新坐标",
+   "net": 39148734.31
+  },
+  {
+   "code": "301660",
+   "name": "粤芯半导体",
+   "net": -37772402.37
+  },
+  {
+   "code": "603516",
+   "name": "淳中科技",
+   "net": 37253788.86
+  },
+  {
+   "code": "688078",
+   "name": "龙软科技",
+   "net": 34468416.91
+  },
+  {
+   "code": "301052",
+   "name": "果麦文化",
+   "net": 26860687.28
+  },
+  {
+   "code": "002086",
+   "name": "东方海洋",
+   "net": -26611387.0
+  },
+  {
+   "code": "603926",
+   "name": "铁流股份",
+   "net": 26283255.0
+  },
+  {
+   "code": "300539",
+   "name": "横河精密",
+   "net": 25846780.0
+  },
+  {
+   "code": "601599",
+   "name": "浙文影业",
+   "net": 23350691.0
+  },
+  {
+   "code": "300703",
+   "name": "创源股份",
+   "net": 21605577.0
+  },
+  {
+   "code": "003038",
+   "name": "鑫铂股份",
+   "net": -20136172.06
+  },
+  {
+   "code": "603391",
+   "name": "力聚热能",
+   "net": -17138954.0
+  },
+  {
+   "code": "600467",
+   "name": "好当家",
+   "net": 16347331.41
+  },
+  {
+   "code": "002685",
+   "name": "华东重机",
+   "net": 15655733.68
+  },
+  {
+   "code": "301261",
+   "name": "恒工精密",
+   "net": 14465217.32
+  },
+  {
+   "code": "301030",
+   "name": "*ST仕净",
+   "net": 10576556.0
+  },
+  {
+   "code": "002724",
+   "name": "海洋王",
+   "net": -10521296.6
+  },
+  {
+   "code": "002749",
+   "name": "国光股份",
+   "net": -9227494.2
+  },
+  {
+   "code": "920067",
+   "name": "华晟智能",
+   "net": 9152381.12
+  },
+  {
+   "code": "000635",
+   "name": "英力特",
+   "net": -5938020.0
+  },
+  {
+   "code": "603001",
+   "name": "奥康国际",
+   "net": 4599811.0
+  },
+  {
+   "code": "300508",
+   "name": "维宏股份",
+   "net": -3490812.0
+  },
+  {
+   "code": "920157",
+   "name": "宇特光电",
+   "net": -3251787.65
+  },
+  {
+   "code": "301697",
+   "name": "贝特利",
+   "net": 2965699.84
+  },
+  {
+   "code": "920309",
+   "name": "菊乐股份",
+   "net": 2002172.58
+  },
+  {
+   "code": "920296",
+   "name": "文峰光电",
+   "net": -1924257.93
+  },
+  {
+   "code": "603004",
+   "name": "鼎龙科技",
+   "net": 1856763.35
+  },
+  {
+   "code": "603359",
+   "name": "*ST东珠",
+   "net": -1412439.16
+  },
+  {
+   "code": "000892",
+   "name": "ST欢瑞",
+   "net": -1303134.0
+  },
+  {
+   "code": "000010",
+   "name": "*ST美丽",
+   "net": 970069.0
+  },
+  {
+   "code": "600180",
+   "name": "*ST瑞茂",
+   "net": 671942.0
+  },
+  {
+   "code": "603021",
+   "name": "*ST华鹏",
+   "net": -648601.4
+  },
+  {
+   "code": "900915",
+   "name": "ST中路B",
+   "net": 5869.2
+  },
+  {
+   "code": "301252",
+   "name": "同星科技",
+   "net": 0.0
+  },
+  {
+   "code": "301189",
+   "name": "奥尼电子",
+   "net": 0.0
+  },
+  {
+   "code": "605255",
+   "name": "天普股份",
+   "net": 0.0
+  },
+  {
+   "code": "000610",
+   "name": "*ST西旅",
+   "net": 0.0
+  },
+  {
+   "code": "920690",
+   "name": "捷众科技",
+   "net": 0.0
+  },
+  {
+   "code": "301583",
+   "name": "托伦斯",
+   "net": 0.0
+  },
+  {
+   "code": "002584",
+   "name": "西陇科学",
+   "net": 0.0
+  }
+ ],
+ "market": {
+  "stock_count": 61,
+  "seat_count": 296,
+  "youzi_buy": 3289742072.22,
+  "youzi_sell": 1997751093.8,
+  "youzi_net": 1291990978.42,
+  "inst_net": 432742979.13,
+  "north_net": 593400338.21,
+  "retail_net": 75237236.39,
+  "other_net": -1091154151.78,
+  "total_net": 1302217380.37,
+  "total_buy": 17501573287.28,
+  "quant_net": 966240375.81,
+  "top_net": 19288919.99,
+  "youzi_in_stocks": 35,
+  "youzi_out_stocks": 19,
+  "limit_up_count": 55,
+  "limit_up_youzi": 21,
+  "known_ratio": 0.99,
+  "known_buy_ratio": 0.19
+ }
+}
